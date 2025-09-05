@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
-  <title>Friends Bank – Mobile v3.3 (CSGO ID)</title>
+  <title>Friends Bank – Mobile v3.3 (Bright + Auth + CSGO Case)</title>
   <meta name="theme-color" content="#ffffff">
   <style>
     :root{
@@ -217,6 +217,30 @@
           <button id="btnAuto10" class="btn">Auto x10</button>
         </div>
       </div>
+
+      <!-- CSGO CASE: Kauf & Öffnen -->
+      <div class="card">
+        <div class="row between">
+          <div class="section-title">CS:GO Kiste</div>
+          <small>ID: <code id="caseId">case_csg_001</code></small>
+        </div>
+
+        <div class="row between" style="gap:.6rem">
+          <div><small>Preis</small><br><b>€<span id="casePrice">50</span></b></div>
+          <div><small>Deine Kisten</small><br><b id="caseOwned">0</b></div>
+          <div class="row" style="gap:.6rem">
+            <button id="btnBuyCase"  class="btn">Kiste kaufen</button>
+            <button id="btnOpenCase" class="btn primary">Kiste öffnen</button>
+          </div>
+        </div>
+
+        <details style="margin-top:.5rem">
+          <summary>Drop-Chancen & Gewinne</summary>
+          <ul style="margin:.4rem 0 .2rem 1rem" id="caseTable"></ul>
+        </details>
+
+        <small id="caseResult"></small>
+      </div>
     </div>
 
     <div id="houseArea" class="card hidden">
@@ -273,13 +297,8 @@
           <div class="section-title">Login / Registrierung</div>
           <label>Name</label><input id="loginName" placeholder="z.B. Julian">
           <label>Passwort</label><input id="loginPass" type="password" placeholder="••••••••">
-          <!-- CSGO-Kisten-ID FELD (NEU) -->
-          <label style="margin-top:.3rem">CSGO-Kisten-ID</label>
-          <input id="csgoId" placeholder="z.B. case_alpha_123">
-          <small>Erlaubt: Buchstaben/Ziffern/„_“/„-“ (max. 64 Zeichen). Wird im Konto gespeichert.</small>
-          <div class="row between" style="gap:.6rem;margin-top:.4rem">
+          <div class="row between" style="gap:.6rem">
             <button id="btnLogin" class="btn primary" style="flex:1">Einloggen / Konto anlegen</button>
-            <button id="btnSaveCsgo" class="btn" style="flex:1">CSGO-ID speichern</button>
             <button id="btnLogout" class="btn danger" style="flex:1">Abmelden</button>
           </div>
           <small id="loginHint">Startguthaben: €1.500. Täglicher Bonus: €500.</small>
@@ -305,9 +324,9 @@
     const sleep = ms => new Promise(r=>setTimeout(r,ms));
     const EUR = n => "€" + (Math.round(n*100)/100).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const todayDE = () => new Date().toLocaleDateString("de-DE",{ timeZone:"Europe/Berlin" });
-    const hash = async (s)=>{ const enc = new TextEncoder().encode(s); const buf = await crypto.subtle.digest("SHA-256", enc); return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join(""); };
+    const hash = async (s)=>{ const enc = new TextEncoder().encode(s); const buf = await crypto.subtle.digest("SHA-256", enc); return Array.from(new Uint8Array(buf)).map(b=>b.toString(16),0).join(""); };
     const showToast = (m)=>{ const t=$("#toast"); t.textContent=m; t.classList.remove("hidden"); setTimeout(()=>t.classList.add("hidden"), 2400); };
-    const logFeed = async (txt)=>{ $("#feed").prepend(document.createTextNode("• "+txt+"\\n")); if (state.userDoc) await addDoc(collection(db, "users", state.userDoc.id, "feed"), { txt, at: serverTimestamp() }); };
+    const logFeed = async (txt)=>{ $("#feed").prepend(document.createTextNode("• "+txt+"\n")); if (state.userDoc) await addDoc(collection(db, "users", state.userDoc.id, "feed"), { txt, at: serverTimestamp() }); };
     const state = { bank:null, user:null, userDoc:null, bankDoc:null, listeners:[], tcRunning:false, authed:false };
 
     // ---------- AUTH (anonymous) ----------
@@ -331,21 +350,6 @@
     $("#btnBank").onclick = openSheet; $("#closeBank").onclick = closeSheet;
     setTimeout(()=>showToast("Tipp: Tippe links oben auf 💶, um deine Bank zu wählen."), 600);
 
-    // --- CSGO-ID Helpers ---
-    const CSGO_RE = /^[A-Za-z0-9_-]{1,64}$/;
-    async function saveCsgoId(){
-      if (!state.userDoc){ showToast("Bitte einloggen & Konto wählen."); return; }
-      const val = ($("#csgoId").value||"").trim();
-      if (!val){ showToast("Bitte eine CSGO-Kisten-ID eingeben."); return; }
-      if (!CSGO_RE.test(val)){ showToast("Ungültige CSGO-ID. Erlaubt: A-Z, a-z, 0-9, _ , - (max 64)."); return; }
-      try{
-        await updateDoc(state.userDoc, { csgoCaseId: val });
-        showToast("CSGO-Kisten-ID gespeichert.");
-        await logFeed("CSGO-Kisten-ID aktualisiert.");
-      }catch(e){ showToast("Fehler beim Speichern: "+(e?.message||"")); }
-    }
-    $("#btnSaveCsgo").onclick = saveCsgoId;
-
     // Bank choice
     $$("#sheetBank [data-bank]").forEach(btn=>{
       btn.onclick = async ()=>{
@@ -365,10 +369,8 @@
     $("#btnLogin").onclick = async ()=>{
       const name = $("#loginName").value.trim();
       const pass = $("#loginPass").value;
-      const csgoInputVal = ($("#csgoId").value||"").trim(); // optional beim Login mitgeben
       if (!state.bank){ showToast("Bitte zuerst eine Bank wählen."); return; }
       if (name.length<2 || pass.length<3){ showToast("Name/Passwort zu kurz."); return; }
-      if (csgoInputVal && !CSGO_RE.test(csgoInputVal)){ showToast("CSGO-ID ungültig (A-Z, a-z, 0-9, _ , -)."); return; }
 
       const btn = $("#btnLogin"); btn.disabled = true; const oldTxt = btn.textContent; btn.textContent = "Bitte warten…";
       try{
@@ -389,35 +391,24 @@
 
         if (!snap.exists()){
           const init = { bank: state.bank, name, passHash, createdAt: serverTimestamp(), bankBalance: 1500, cash: 0, lastDaily: "", lastBorrow: "", loanOutstanding: 0, creditOutstanding: 0, lastRent: "", shares: 0 };
-          if (csgoInputVal) init.csgoCaseId = csgoInputVal;
           await setDoc(userRef, init);
           await setDoc(idxRef, { bank: state.bank, uid: userId });
           showToast("Konto erstellt. Willkommen!");
         }else{
           const data = snap.data();
           if (data.passHash !== passHash){ showToast("Falsches Passwort."); return; }
-          // beim Login optional CSGO-ID updaten
-          if (csgoInputVal && data.csgoCaseId !== csgoInputVal){
-            await updateDoc(userRef, { csgoCaseId: csgoInputVal });
-          }
         }
         await attachUser(userRef);
-        // vorhandene CSGO-ID ins Feld spiegeln
-        try{
-          const cur = (await getDoc(userRef)).data()?.csgoCaseId || "";
-          $("#csgoId").value = cur;
-        }catch(_e){}
         closeSheet();
         await logFeed("Angemeldet bei "+state.bank+".");
       }catch(err){ console.error(err); showToast("Login-Fehler: "+(err?.message||"Unbekannt")); }
       finally{ btn.disabled = false; btn.textContent = oldTxt; }
     };
 
-    // Logout
+    // Logout / Konto wechseln
     $("#btnLogout").onclick = ()=>{
       state.listeners.forEach(u=>u()); state.listeners=[];
       state.user = null; state.userDoc = null;
-      // UI reset
       $("#bankBalance").textContent = "€0";
       $("#loanOutstanding").textContent = "€0";
       $("#creditOutstanding").textContent = "€0";
@@ -441,10 +432,9 @@
         $("#creditOutstanding").textContent = EUR(u.creditOutstanding||0);
         userSharesEl.textContent = (u.shares||0);
         $("#rentInfo").textContent = u.lastRent ? ("Letzte Miete: "+u.lastRent) : "Noch keine Miete kassiert";
-        // CSGO-ID ins Eingabefeld spiegeln, wenn vorhanden
-        const curCsgo = u.csgoCaseId || "";
-        if (document.activeElement !== $("#csgoId")) $("#csgoId").value = curCsgo;
         renderHouses(u);
+        // <<< Neu: Kisten-Bestand live spiegeln
+        updateCaseOwned(u);
       });
       state.listeners.push(unsub);
       await ensureBankDoc(); await ensureTicker(); await loadFeed(); await attachChat();
@@ -491,7 +481,7 @@
       const q = query(collection(db, "users", state.userDoc.id, "feed"), orderBy("at","desc"), limit(50));
       onSnapshot(q, (qs)=>{
         const el = $("#feed"); el.textContent = "";
-        qs.forEach(doc=> el.append("• "+doc.data().txt+"\\n") );
+        qs.forEach(doc=> el.append("• "+doc.data().txt+"\n") );
       });
     }
 
@@ -763,6 +753,120 @@
     $("#btnChat").onclick  = ()=> requireLoginThen("chatArea");
 
     renderHouses({});
+
+    /* ===================== CSGO CASE (Kaufen & Öffnen) ===================== */
+
+    // Konstanten & Tabelle
+    const CSGO_CASE_ID   = "case_csg_001";
+    const CSGO_CASE_NAME = "CS:GO Kiste";
+    const CSGO_CASE_PRICE = 50; // Einsatz aus Bargeld -> fließt in die Bank
+
+    // Drop-Tabelle (Gewinn = Auszahlung an User aus der Bank)
+    const CSGO_CASE_REWARDS = [
+      { label: "Common",    payout: 10,  weight: 520 },  // 52.0%
+      { label: "Uncommon",  payout: 25,  weight: 290 },  // 29.0%
+      { label: "Rare",      payout: 60,  weight: 140 },  // 14.0%
+      { label: "Epic",      payout: 150, weight: 45  },  // 4.5%
+      { label: "Legendary", payout: 400, weight: 5   },  // 0.5%
+    ];
+
+    // Hilfen
+    function weightedPick(items){
+      const total = items.reduce((s,i)=>s+i.weight, 0);
+      const r = Math.random()*total;
+      let acc = 0;
+      for (const it of items){ acc += it.weight; if (r <= acc) return it; }
+      return items[items.length-1];
+    }
+
+    // UI initialisieren
+    (function initCaseUI(){
+      const priceEl = document.querySelector("#casePrice");
+      const tableEl = document.querySelector("#caseTable");
+      if (priceEl) priceEl.textContent = String(CSGO_CASE_PRICE);
+      if (tableEl){
+        tableEl.innerHTML = "";
+        const denom = CSGO_CASE_REWARDS.reduce((s,i)=>s+i.weight,0);
+        CSGO_CASE_REWARDS.forEach(r=>{
+          const li = document.createElement("li");
+          const pct = (r.weight / denom * 100).toFixed(2);
+          li.textContent = `${r.label}: ${EUR(r.payout)} (${pct}%)`;
+          tableEl.appendChild(li);
+        });
+      }
+      const idEl = document.querySelector("#caseId");
+      if (idEl) idEl.textContent = CSGO_CASE_ID;
+    })();
+
+    // Bestand spiegeln
+    function updateCaseOwned(u){
+      const ownedEl = document.querySelector("#caseOwned");
+      if (!ownedEl) return;
+      ownedEl.textContent = String(u?.["inv_"+CSGO_CASE_ID] || 0);
+    }
+
+    // Kiste kaufen: Bargeld -> Bank (spendCash), dann inv_case_xxx++
+    async function buyCase(){
+      if (!state.userDoc){ openSheet(); return; }
+      try{
+        await spendCash(CSGO_CASE_PRICE);
+        await runTransaction(db, async (tx)=>{
+          const u = await tx.get(state.userDoc);
+          const ud = u.data() || {};
+          const key = "inv_"+CSGO_CASE_ID;
+          tx.update(state.userDoc, { [key]: (ud[key]||0) + 1 });
+        });
+        const u2 = (await getDoc(state.userDoc)).data();
+        updateCaseOwned(u2);
+        await logFeed(`Kiste gekauft (${CSGO_CASE_ID}) für ${EUR(CSGO_CASE_PRICE)}.`);
+        showToast(`Gekauft: 1× ${CSGO_CASE_NAME}`);
+      }catch(e){
+        showToast(e?.message || "Fehler beim Kauf");
+      }
+    }
+
+    // Kiste öffnen: inv--, Drop ziehen, Gewinn an User aus Bank (payoutCash)
+    async function openCase(){
+      if (!state.userDoc){ openSheet(); return; }
+      const resEl = document.querySelector("#caseResult");
+      try{
+        await runTransaction(db, async (tx)=>{
+          const u = await tx.get(state.userDoc);
+          const ud = u.data() || {};
+          const key = "inv_"+CSGO_CASE_ID;
+          const owned = ud[key]||0;
+          if (owned <= 0) throw new Error("Keine Kiste vorhanden.");
+          const patch = {}; patch[key] = owned - 1;
+          tx.update(state.userDoc, patch);
+        });
+
+        const drop = weightedPick(CSGO_CASE_REWARDS);
+        const payout = drop.payout;
+
+        if (payout > 0){
+          await payoutCash(payout);
+          await logFeed(`CS:GO Kiste Gewinn: ${drop.label} (${EUR(payout)})`);
+          if (resEl) resEl.innerHTML = `<b>Gewinn:</b> ${drop.label} • ${EUR(payout)}`;
+          showToast(`Gewinn: ${drop.label} • ${EUR(payout)}`);
+        }else{
+          await logFeed(`CS:GO Kiste: kein Gewinn`);
+          if (resEl) resEl.textContent = `Kein Gewinn`;
+          showToast(`Kein Gewinn`);
+        }
+
+        const u2 = (await getDoc(state.userDoc)).data();
+        updateCaseOwned(u2);
+      }catch(e){
+        showToast(e?.message || "Fehler beim Öffnen");
+      }
+    }
+
+    // Buttons binden
+    const btnBuyCase  = document.querySelector("#btnBuyCase");
+    const btnOpenCase = document.querySelector("#btnOpenCase");
+    if (btnBuyCase)  btnBuyCase.onclick  = buyCase;
+    if (btnOpenCase) btnOpenCase.onclick = openCase;
+
   </script>
 </body>
 </html>
