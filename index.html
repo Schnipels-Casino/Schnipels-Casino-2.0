@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
-  <title>Friends Bank – Mobile v3.6 (UI Topbar Update)</title>
+  <title>Friends Bank – Mobile v3.4 (Slots Anti-Spam + CS:GO Case)</title>
   <meta name="theme-color" content="#ffffff">
   <style>
     :root{
@@ -18,7 +18,7 @@
       -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
     .hidden{display:none!important}
     .row{display:flex;gap:.8rem;align-items:center}
-    .col{display:flex;flex-direction:column;gap:.2rem}
+    .col{display:flex;flex-direction:column;gap:.8rem}
     .between{justify-content:space-between}
     .center{justify-content:center;align-items:center}
     .container{max-width:880px;margin:0 auto}
@@ -28,23 +28,14 @@
     .btn.primary{background:var(--accent);color:#052010;border-color:#129454}
     .btn.warn{background:var(--warn);color:#231a00;border-color:#b07404}
     .btn.danger{background:#f43f5e;color:#2b0d0d;border-color:#d11a44}
-    .btn.small{min-height:40px;padding:.5rem .8rem;border-radius:12px;font-weight:900}
     input,select{width:100%;background:#f2f5fb;color:var(--text);border:1px solid var(--outline);border-radius:12px;padding:1rem 1rem;font-size:18px}
     label{font-size:1rem;color:#24324a;font-weight:800}
     small{color:var(--muted);font-size:.98rem}
     ::placeholder{color:#6b7280;opacity:.9}
-
-    /* ---------- TOPBAR (new layout) ---------- */
     .topbar{position:sticky;top:0;z-index:50;background:#ffffffee;border-bottom:1px solid var(--outline);padding:.6rem .9rem;backdrop-filter:saturate(1.3) blur(6px);box-shadow:0 6px 18px rgba(15,22,36,.06)}
-    .top-grid{display:grid;grid-template-columns:1fr auto;gap:.6rem;align-items:center}
-    .left-wrap{display:flex;align-items:center;gap:.7rem;min-height:52px}
-    .bank-name{font-weight:1000;font-size:1.05rem;line-height:1.1}
-    .acct-line{font-weight:800;color:#0f172a}
-    .circle{width:44px;height:44px;border-radius:999px;background:var(--pill);border:1px solid var(--outline);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;cursor:pointer}
-    .icon-row{display:flex;gap:.5rem;align-items:center;justify-content:flex-end}
-    .cash-amount{font-weight:900}
+    .top-grid{display:grid;grid-template-columns:110px 1fr 160px;gap:.6rem;align-items:center}
+    .circle{width:48px;height:48px;border-radius:999px;background:var(--pill);border:1px solid var(--outline);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;cursor:pointer}
     #screen{padding:14px;display:flex;flex-direction:column;gap:14px;padding-bottom:110px}
-
     .tabs{display:flex;gap:.6rem}
     .tab{flex:1;padding:.9rem;border:1px solid var(--outline);background:var(--pill);border-radius:12px;text-align:center;font-weight:900;cursor:pointer}
     .tab.active{background:var(--accent2);color:#fff;border-color:#1e4fd5}
@@ -60,38 +51,59 @@
     .slot-cell.spin{transform:scale(1.05)}
     footer.nav{position:fixed;left:0;right:0;bottom:0;padding:.6rem;background:#ffffffee;border-top:1px solid var(--outline);display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;backdrop-filter:saturate(1.2) blur(6px);z-index:60}
 
-    /* Modal (Bank/Login) anchored at top */
-    .modal{position:fixed;inset:0;display:none;align-items:flex-start;justify-content:center;background:rgba(15,22,36,.12);backdrop-filter:blur(2px) saturate(1.1);z-index:1000}
-    .sheet{width:100%;max-width:880px;background:var(--card);border:1px solid var(--outline);border-radius:18px;box-shadow:var(--shadow);margin:72px 12px 18px;overflow:hidden}
+    /* >>> FIX: modal/sheet so the login sits at the TOP as before <<< */
+    .modal{
+      position:fixed;
+      inset:0;
+      display:none;             /* shown via JS -> display:flex */
+      align-items:flex-start;   /* anchor to top */
+      justify-content:center;
+      background:rgba(15,22,36,.12);
+      backdrop-filter:blur(2px) saturate(1.1);
+      z-index:1000;             /* above topbar/footer */
+    }
+    .sheet{
+      width:100%;
+      max-width:880px;
+      background:var(--card);
+      border:1px solid var(--outline);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      margin:72px 12px 18px;    /* appear just under the topbar */
+      overflow:hidden;
+    }
     .handle{width:46px;height:5px;background:#e5e7eb;border-radius:999px;margin:10px auto}
 
+    /* (optional) simple bubbles for chat so it still looks tidy */
     .chat-bubble{padding:.6rem .8rem;border:1px solid var(--outline);border-radius:12px;background:var(--pill);margin-bottom:.6rem}
     .chat-bubble.mine{background:#e8f7ff;border-color:#3b82f6}
-
+    /* END FIX */
     .bank-choice .btn{border-width:2px}
     .bank-choice .btn.active{background:#e8f7ff;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.18) inset}
   </style>
 </head>
 <body>
   <div class="topbar">
-    <div class="container top-grid">
-      <!-- LEFT: login/logout + bank + balance -->
-      <div class="left-wrap">
-        <div id="btnBank" class="circle" title="Bank wählen / Login">💶</div>
-        <button id="btnLogoutTop" class="btn danger small hidden" title="Abmelden">Logout</button>
-        <div class="col">
-          <div class="bank-name" id="bankLabel">Keine Bank gewählt</div>
-          <div class="acct-line money" id="acctBalance">—</div>
+    <div class="container">
+      <div class="top-grid">
+        <div class="row" style="gap:.6rem">
+          <div id="btnBank" class="circle" title="Bank wählen">💶</div>
+          <div class="col">
+            <div style="font-weight:1000;font-size:1.05rem" id="bankLabel">Keine Bank gewählt</div>
+            <small class="money" id="acctBalance">—</small>
+          </div>
         </div>
-      </div>
-
-      <!-- RIGHT: icons (Slots, Häuser, Chat) + Cash icon + amount -->
-      <div class="icon-row">
-        <div id="btnSlots" class="circle" title="Slots">🎰</div>
-        <div id="btnHouse" class="circle" title="Häuser">🏠</div>
-        <div id="btnChat" class="circle" title="Chat">💬</div>
-        <div class="circle" title="Bargeld">💵</div>
-        <div id="cashLabel" class="cash-amount">€0</div>
+        <div class="center">
+          <button id="btnChat" class="btn" style="padding:.65rem 1rem;">💬 Chat</button>
+        </div>
+        <div class="row" style="gap:.5rem;justify-content:flex-end">
+          <div class="col" style="align-items:flex-end">
+            <div class="small" style="opacity:.9">Bargeld</div>
+            <div id="cashLabel" class="money" style="font-size:1.05rem">€0</div>
+          </div>
+          <div id="btnSlots" class="circle" title="Slots">🎰</div>
+          <div id="btnHouse" class="circle" title="Häuser">🏠</div>
+        </div>
       </div>
     </div>
   </div>
@@ -116,7 +128,6 @@
       </div>
     </div>
 
-    <!-- BANK AREA -->
     <div id="bankArea" class="card">
       <div class="section-title">Dein Konto</div>
       <div class="grid2">
@@ -146,7 +157,7 @@
             <button id="btnDeposit" class="btn primary">Einzahlen ➜</button>
             <button id="btnWithdraw" class="btn">⬅ Auszahlen</button>
           </div>
-          <small>Der 💵-Betrag steht oben rechts.</small>
+          <small>Bargeld wird oben rechts angezeigt.</small>
         </div>
         <div class="card">
           <div class="section-title">Leihen & Kredit</div>
@@ -184,7 +195,6 @@
       </div>
     </div>
 
-    <!-- SLOTS AREA (Jackpot aus v3.5 beibehalten) -->
     <div id="slotsArea" class="card hidden">
       <div class="section-title">Slots 🎰</div>
       <small>Einsätze: 5 / 10 / 30 / 50 / 80 / 100 € (vom Bargeld)</small>
@@ -218,7 +228,6 @@
 
       <div class="card">
         <div class="row between"><div class="section-title">Triple Chance</div><div id="tcStatus"></div></div>
-        <div class="row between" style="margin-bottom:.4rem"><small>Jackpot</small><b id="tcJackpot">—</b></div>
         <div class="center" style="margin:.4rem 0">
           <div class="slot-grid" id="slotGrid">
             <div class="slot-cell">🍋</div><div class="slot-cell">🍒</div><div class="slot-cell">🍇</div>
@@ -282,6 +291,7 @@
   </footer>
 
   <!-- Bank Sheet -->
+  <!-- FIX: Use modal overlay aligned to TOP (align-items:flex-start) -->
   <div id="sheetBank" class="modal" style="display:none;align-items:flex-start">
     <div class="sheet">
       <div class="handle"></div>
@@ -335,7 +345,7 @@
     const state = { bank:null, user:null, userDoc:null, bankDoc:null, listeners:[], tcRunning:false, authed:false };
 
     // ---- Slots Rate-Limit & UI-Helpers ----
-    const SLOT_MIN_INTERVAL = 2000;
+    const SLOT_MIN_INTERVAL = 2000; // 2s zwischen Slot-Aktionen (HL/CF/Triple/CASE). Für 1s => 1000
     let lastSlotAction = 0;
     function slotGuard() {
       const now = Date.now();
@@ -369,34 +379,12 @@
     ensureAuth();
 
     // ---------- UI refs ----------
-    const bankSheet = $("#sheetBank"),
-          bankLabel=$("#bankLabel"),
-          bankBalance=$("#bankBalance"),
-          cashLabel=$("#cashLabel"),
-          acctBalance=$("#acctBalance"),
-          stockPriceEl=$("#stockPrice"),
-          stockBankName=$("#stockBankName"),
-          bankFundsEl=$("#bankFunds"),
-          userSharesEl=$("#userShares"),
-          jackpotEl=$("#tcJackpot"),
-          btnBank=$("#btnBank"),
-          btnLogoutTop=$("#btnLogoutTop");
-
+    const bankSheet = $("#sheetBank"), bankLabel=$("#bankLabel"), bankBalance=$("#bankBalance"), cashLabel=$("#cashLabel"), acctBalance=$("#acctBalance"), stockPriceEl=$("#stockPrice"), stockBankName=$("#stockBankName"), bankFundsEl=$("#bankFunds"), userSharesEl=$("#userShares");
     const openSheet = ()=> bankSheet.style.display = "flex";
     const closeSheet = ()=> bankSheet.style.display = "none";
-    btnBank.onclick = openSheet;
-    $("#closeBank").onclick = closeSheet;
+    $("#btnBank").onclick = openSheet; $("#closeBank").onclick = closeSheet;
+    // Optional: close when clicking outside the sheet
     bankSheet.addEventListener("click",(e)=>{ if(e.target===bankSheet) closeSheet(); });
-
-    function updateAuthControls(isLoggedIn){
-      if (isLoggedIn){
-        btnBank.classList.add("hidden");
-        btnLogoutTop.classList.remove("hidden");
-      }else{
-        btnLogoutTop.classList.add("hidden");
-        btnBank.classList.remove("hidden");
-      }
-    }
 
     setTimeout(()=>showToast("Tipp: Tippe links oben auf 💶, um deine Bank zu wählen."), 600);
 
@@ -431,7 +419,7 @@
         const idxRef = doc(db, "users_index", uname);
         const idxSnap = await getDoc(idxRef);
         if (idxSnap.exists() && idxSnap.data().bank !== state.bank){
-          showToast(`Name bereits in ${idxSnap.data().bank} registriert.`);
+          showToast(`Name bereits in ${idxSnap.data().bank} registriert. Verwende einen anderen Namen oder melde dich dort an.`);
           return;
         }
 
@@ -455,25 +443,18 @@
       finally{ btn.disabled = false; btn.textContent = oldTxt; }
     };
 
-    function performLogout(){
+    $("#btnLogout").onclick = ()=>{
       state.listeners.forEach(u=>u()); state.listeners=[];
       state.user = null; state.userDoc = null;
-      bankBalance.textContent = "€0";
+      $("#bankBalance").textContent = "€0";
       $("#loanOutstanding").textContent = "€0";
       $("#creditOutstanding").textContent = "€0";
-      userSharesEl.textContent = "0";
+      $("#userShares").textContent = "0";
       $("#rentInfo").textContent = "";
       $("#feed").textContent = "";
-      acctBalance.textContent = "—";
-      // keep bankLabel as is; user may choose a different bank
-      if (jackpotEl) jackpotEl.textContent = "—";
-      updateAuthControls(false);
-      showToast("Abgemeldet. Tippe auf 💶 um dich wieder einzuloggen.");
+      showToast("Abgemeldet. Du kannst nun eine (andere) Bank und einen neuen Namen wählen.");
       openSheet();
-    }
-
-    $("#btnLogout").onclick = performLogout;
-    btnLogoutTop.onclick = performLogout;
+    };
 
     async function attachUser(userRef){
       state.listeners.forEach(u=>u()); state.listeners=[];
@@ -482,15 +463,13 @@
         const u = d.data(); if (!u) return;
         state.user = { id:d.id, ...u };
         bankBalance.textContent = EUR(u.bankBalance||0);
-        bankLabel.textContent = state.bank || "—";          // nur Bankname
-        acctBalance.textContent = EUR(u.bankBalance||0);    // nur Geld
+        acctBalance.textContent = state.bank ? (state.bank+" • "+EUR(u.bankBalance||0)) : "—";
         cashLabel.textContent = EUR(u.cash||0);
         $("#loanOutstanding").textContent = EUR(u.loanOutstanding||0);
         $("#creditOutstanding").textContent = EUR(u.creditOutstanding||0);
         userSharesEl.textContent = (u.shares||0);
         $("#rentInfo").textContent = u.lastRent ? ("Letzte Miete: "+u.lastRent) : "Noch keine Miete kassiert";
         renderHouses(u);
-        updateAuthControls(true);
       });
       state.listeners.push(unsub);
       await ensureBankDoc(); await ensureTicker(); await loadFeed(); await attachChat();
@@ -503,17 +482,13 @@
       const bRef = doc(db, "banks", id);
       const snap = await getDoc(bRef);
       if (!snap.exists()){
-        await setDoc(bRef, { name: state.bank, funds: 1_000_000_000, stockPrice: 100, lastStockUpdate: Date.now(), jackpotTC: 0 });
-      }else{
-        const data = snap.data();
-        if (data.jackpotTC === undefined){ await updateDoc(bRef, { jackpotTC: 0 }); }
+        await setDoc(bRef, { name: state.bank, funds: 1_000_000_000, stockPrice: 100, lastStockUpdate: Date.now() });
       }
       state.bankDoc = bRef;
       const unsub = onSnapshot(bRef, (d)=>{
         const b = d.data(); if (!b) return;
         bankFundsEl.textContent = EUR(b.funds||0);
         stockPriceEl.textContent = EUR(b.stockPrice||0);
-        if (jackpotEl) jackpotEl.textContent = EUR(b.jackpotTC||0);
       });
       state.listeners.push(unsub);
     }
@@ -658,44 +633,60 @@
       }catch(e){ showToast(e.message||"Fehler"); }
     };
 
-    // ------- Slots helpers -------
+    // Aktien
+    $("#btnBuyShares").onclick = async ()=>{
+      if (!state.userDoc) return openSheet();
+      const qty = Math.trunc(Number($("#sharesQty").value||0)); if (qty<=0) return;
+      try{
+        await txUpdate(async (tx)=>{
+          const u = await tx.get(state.userDoc); const b = await tx.get(state.bankDoc);
+          const ud = u.data(); const bd = b.data();
+          const price = b.data().stockPrice||100;
+          const cost = Math.round(price*qty*100)/100;
+          if ((ud.bankBalance||0) < cost) throw new Error("Zu wenig Guthaben.");
+          tx.update(state.userDoc, { bankBalance:(ud.bankBalance||0)-cost, shares:(ud.shares||0)+qty });
+          tx.update(state.bankDoc, { funds:(bd.funds||0)+cost });
+        });
+        await logFeed("Aktienkauf: +"+qty+" Stk."); showToast("Gekauft: "+qty+" Stk.");
+      }catch(e){ showToast(e.message||"Fehler"); }
+    };
+    $("#btnSellShares").onclick = async ()=>{
+      if (!state.userDoc) return openSheet();
+      const qty = Math.trunc(Number($("#sharesQty").value||0)); if (qty<=0) return;
+      try{
+        await txUpdate(async (tx)=>{
+          const u = await tx.get(state.userDoc); const b = await tx.get(state.bankDoc);
+          const ud = u.data(); const bd = b.data();
+          const price = b.data().stockPrice||100;
+          if ((ud.shares||0) < qty) throw new Error("Nicht genug Anteile.");
+          const proceeds = Math.round(price*qty*100)/100;
+          tx.update(state.userDoc, { bankBalance:(ud.bankBalance||0)+proceeds, shares:(ud.shares||0)-qty });
+          tx.update(state.bankDoc, { funds:(bd.funds||0)-proceeds });
+        });
+        await logFeed("Aktienverkauf: -"+qty+" Stk."); showToast("Verkauft: "+qty+" Stk.");
+      }catch(e){ showToast(e.message||"Fehler"); }
+    };
+
+    // Häuser (Demo)
+    const HOUSES = [
+      { id:"h1", name:"Klein Familien Haus", price:50_000, rent:2_500 },
+      { id:"h2", name:"Mittel Familien Haus", price:75_000, rent:4_000 },
+      { id:"h3", name:"Groß Familien Haus", price:100_000, rent:6_000 },
+      { id:"h4", name:"Dubai Villa", price:450_000, rent:15_000 },
+      { id:"h5", name:"Luxus Villa", price:1_000_000, rent:50_000 }
+    ];
+    function renderHouses(u){ const wrap=$("#houseList"); wrap.innerHTML=""; HOUSES.forEach(h=>{ const owned=(u && u["own_"+h.id])||0; const el=document.createElement("div"); el.className="card"; el.innerHTML=`<div class="section-title">${h.name}</div><div class="row between"><small>Preis</small><b>${EUR(h.price)}</b></div><div class="row between"><small>Miete/Tag</small><b>${EUR(h.rent)}</b></div><div class="row between"><small>Besitz</small><b>${owned}</b></div><div class="row grid2" style="margin-top:.4rem"><button class="btn" data-buy="${h.id}">Kaufen</button><button class="btn" data-sell="${h.id}" ${owned?"":"disabled"}>Verkaufen</button></div>`; wrap.appendChild(el); }); $$("#houseList [data-buy]").forEach(b=> b.onclick = ()=> buyHouse(b.dataset.buy)); $$("#houseList [data-sell]").forEach(b=> b.onclick = ()=> sellHouse(b.dataset.sell)); }
+    async function buyHouse(hid){ if (!state.userDoc) return openSheet(); const h=HOUSES.find(x=>x.id===hid); if(!h) return; try{ await txUpdate(async(tx)=>{ const u=await tx.get(state.userDoc); const b=await tx.get(state.bankDoc); const ud=u.data(); const bd=b.data(); if((ud.bankBalance||0)<h.price) throw new Error("Zu wenig Guthaben."); const patch={}; patch["own_"+hid]=(ud["own_"+hid]||0)+1; tx.update(state.userDoc, Object.assign(patch,{bankBalance:(ud.bankBalance||0)-h.price})); tx.update(state.bankDoc,{funds:(bd.funds||0)+h.price}); }); await logFeed("Gekauft: "+h.name+" für "+EUR(h.price)); showToast("Gekauft: "+h.name);}catch(e){ showToast(e.message||"Fehler"); }}
+    async function sellHouse(hid){ if (!state.userDoc) return openSheet(); const h=HOUSES.find(x=>x.id===hid); if(!h) return; try{ await txUpdate(async(tx)=>{ const u=await tx.get(state.userDoc); const b=await tx.get(state.bankDoc); const ud=u.data(); const bd=b.data(); if((ud["own_"+hid]||0)<=0) throw new Error("Kein Besitz."); const patch={}; patch["own_"+hid]=(ud["own_"+hid]||0)-1; const refund=Math.round(h.price*0.8); tx.update(state.userDoc, Object.assign(patch,{bankBalance:(ud.bankBalance||0)+refund})); tx.update(state.bankDoc,{funds:(bd.funds||0)-refund}); }); await logFeed("Verkauft: "+h.name+" für "+EUR(h.price*0.8)); showToast("Verkauft: "+h.name);}catch(e){ showToast(e.message||"Fehler"); }}
+
+    // ------- Slots -------
     const SYMBOLS = ["🍋","🍒","🍇","🍀","⭐","🔔","7️⃣","🍉"];
     const stakes = [5,10,30,50,80,100];
     function parseStake(selId){ return stakes.includes(Number($(selId).value)) ? Number($(selId).value) : 5; }
-    async function payoutCash(amount){
-      if (!state.userDoc) return openSheet();
-      await txUpdate(async (tx)=>{
-        const u=await tx.get(state.userDoc); const b=await tx.get(state.bankDoc);
-        const ud=u.data(); const bd=b.data();
-        tx.update(state.userDoc,{cash:(ud.cash||0)+amount});
-        tx.update(state.bankDoc,{funds:(bd.funds||0)-amount});
-      });
-    }
-    async function spendStakeSplit(amount){
-      if (!state.userDoc) return openSheet();
-      await txUpdate(async (tx)=>{
-        const u = await tx.get(state.userDoc);
-        const b = await tx.get(state.bankDoc);
-        const ud = u.data(); const bd = b.data();
-        if ((ud.cash||0) < amount) throw new Error("Zu wenig Bargeld. Bitte auszahlen.");
-        const half = Math.round((amount/2)*100)/100;
-        tx.update(state.userDoc, { cash:(ud.cash||0) - amount });
-        tx.update(state.bankDoc, { funds: (bd.funds||0) + half, jackpotTC: (bd.jackpotTC||0) + half });
-      });
-    }
-    async function payoutJackpot(){
-      await txUpdate(async (tx)=>{
-        const u = await tx.get(state.userDoc);
-        const b = await tx.get(state.bankDoc);
-        const ud = u.data(); const bd = b.data();
-        const jp = Math.round((bd.jackpotTC||0)*100)/100;
-        if (jp <= 0) return;
-        tx.update(state.userDoc, { cash:(ud.cash||0)+jp });
-        tx.update(state.bankDoc, { jackpotTC: 0 });
-      });
-    }
+    async function spendCash(amount){ if (!state.userDoc) return openSheet(); await txUpdate(async (tx)=>{ const u=await tx.get(state.userDoc); const b=await tx.get(state.bankDoc); const ud=u.data(); const bd=b.data(); if((ud.cash||0)<amount) throw new Error("Zu wenig Bargeld. Bitte auszahlen."); tx.update(state.userDoc,{cash:(ud.cash||0)-amount}); tx.update(state.bankDoc,{funds:(bd.funds||0)+amount}); }); }
+    async function payoutCash(amount){ if (!state.userDoc) return openSheet(); await txUpdate(async (tx)=>{ const u=await tx.get(state.userDoc); const b=await tx.get(state.bankDoc); const ud=u.data(); const bd=b.data(); tx.update(state.userDoc,{cash:(ud.cash||0)+amount}); tx.update(state.bankDoc,{funds:(bd.funds||0)-amount}); }); }
 
-    // ------- High/Lower -------
+    // High/Lower
     let hlBusy=false;
     $("#btnHigher").onclick = ()=> { if (!slotGuard()) return; playHL("higher"); };
     $("#btnLower").onclick  = ()=> { if (!slotGuard()) return; playHL("lower");  };
@@ -706,14 +697,7 @@
       quickStatus($("#hlStatus"), "… wird geprüft");
       const stake = parseStake("#stakeHL");
       try{
-        // kompletter Einsatz -> Bankfonds
-        await txUpdate(async (tx)=>{
-          const u=await tx.get(state.userDoc); const b=await tx.get(state.bankDoc);
-          const ud=u.data(); const bd=b.data();
-          if((ud.cash||0) < stake) throw new Error("Zu wenig Bargeld. Bitte auszahlen.");
-          tx.update(state.userDoc,{cash:(ud.cash||0)-stake});
-          tx.update(state.bankDoc,{funds:(bd.funds||0)+stake});
-        });
+        await spendCash(stake);
         const dealer = 1+Math.floor(Math.random()*13);
         const you    = 1+Math.floor(Math.random()*13);
         $("#hlDealer").textContent = cardEmoji(dealer);
@@ -728,7 +712,7 @@
     }
     function cardEmoji(v){ const faces = {1:"A",11:"J",12:"Q",13:"K"}; return "🂠"+(faces[v]||String(v)); }
 
-    // ------- Coinflip -------
+    // Coinflip
     let cfBusy=false;
     $("#btnCF").onclick = async ()=>{
       if (!slotGuard()) return;
@@ -739,13 +723,7 @@
       setSlotsDisabled(true);
       const stake = parseStake("#stakeCF");
       try{
-        await txUpdate(async (tx)=>{
-          const u=await tx.get(state.userDoc); const b=await tx.get(state.bankDoc);
-          const ud=u.data(); const bd=b.data();
-          if((ud.cash||0) < stake) throw new Error("Zu wenig Bargeld. Bitte auszahlen.");
-          tx.update(state.userDoc,{cash:(ud.cash||0)-stake});
-          tx.update(state.bankDoc,{funds:(bd.funds||0)+stake});
-        });
+        await spendCash(stake);
         const pick = $("#cfPick").value;
         const res = Math.random()<.5?"kopf":"zahl";
         $("#cfResult").textContent = res==="kopf"?"🙂":"🪙";
@@ -757,7 +735,7 @@
       setTimeout(()=>setSlotsDisabled(false), SLOT_MIN_INTERVAL);
     };
 
-    // ------- Triple Chance (mit Jackpot 50/50) -------
+    // Triple Chance
     let tcBusy=false, tcLock=false;
     $("#btnSpin").onclick = ()=>{
       if (!slotGuard()) return;
@@ -774,14 +752,13 @@
       tcBusy=false;
       setTimeout(()=>setSlotsDisabled(false), SLOT_MIN_INTERVAL);
     };
-
     async function spinOnce(fromAuto=false){
       if (!state.userDoc){ openSheet(); return; }
       if (tcLock) return; tcLock=true;
       const stake = parseStake("#stakeTC");
       try{
         if (!fromAuto) quickStatus($("#tcStatus"), "… dreht");
-        await spendStakeSplit(stake);
+        await spendCash(stake);
         const grid = $("#slotGrid").children;
         const picks=[];
         for (let i=0;i<9;i++){ const sym = SYMBOLS[Math.floor(Math.random()*SYMBOLS.length)]; picks.push(sym); }
@@ -790,18 +767,12 @@
         let wins=0; lines.forEach(L=>{ if (picks[L[0]]===picks[L[1]] && picks[L[1]]===picks[L[2]]) wins++; });
         if (wins>0){ const payout = stake*3*wins; await payoutCash(payout); $("#tcStatus").textContent = `Gewinn ${EUR(payout)} (${wins} Linie${wins>1?"n":""})`; await logFeed(`TripleChance Gewinn: ${EUR(payout)} (${wins} Linien)`); }
         else { $("#tcStatus").textContent = `Verlust ${EUR(stake)}`; await logFeed(`TripleChance Verlust: ${EUR(stake)}`); }
-        const full = picks.every(s => s === picks[0]);
-        if (full){
-          await payoutJackpot();
-          await logFeed("🎉 TripleChance JACKPOT (Vollbild) ausgezahlt!");
-          showToast("🎉 JACKPOT! Vollbild!");
-        }
         setTimeout(()=>$("#tcStatus").textContent="", 1400);
       }catch(e){ showToast(e.message||"Fehler"); }
       tcLock=false;
     }
 
-    // ------- CS:GO CASE -------
+    // ------- CS:GO CASE (ID: case_csg_001) -------
     const CASE_ID = "case_csg_001";
     $("#caseId").textContent = CASE_ID;
     const CASE_LOOT = [
@@ -823,13 +794,7 @@
       if (!state.userDoc) return openSheet();
       const stake = stakeCase();
       try{
-        await txUpdate(async (tx)=>{
-          const u=await tx.get(state.userDoc); const b=await tx.get(state.bankDoc);
-          const ud=u.data(); const bd=b.data();
-          if((ud.cash||0) < stake) throw new Error("Zu wenig Bargeld. Bitte auszahlen.");
-          tx.update(state.userDoc,{cash:(ud.cash||0)-stake});
-          tx.update(state.bankDoc,{funds:(bd.funds||0)+stake});
-        });
+        await spendCash(stake); // Einsatz ➜ Bankfonds
         $("#caseStatus").textContent = "Kiste gekauft.";
         await logFeed(`CS:GO-Kiste (${CASE_ID}) gekauft: Einsatz ${EUR(stake)}`);
       }catch(e){ showToast(e.message||"Fehler"); }
@@ -838,10 +803,11 @@
       if (!state.userDoc) return openSheet();
       const stake = stakeCase();
       try{
+        // Öffnen kostet nichts zusätzlich; Gewinn kommt aus Bankfonds
         const drop = pickWeighted();
         const win  = Math.round(stake * drop.multiplier);
         $("#casePrize").textContent = `Drop: ${drop.name} (${drop.multiplier}×) • Gewinn ${EUR(win)}`;
-        if (win>0) await payoutCash(win);
+        if (win>0) await payoutCash(win); // Auszahlung aus Bankfonds an User
         await logFeed(`CS:GO-Kiste geöffnet (${CASE_ID}): ${drop.name}, Gewinn ${EUR(win)}`);
       }catch(e){ showToast(e.message||"Fehler"); }
     }
@@ -868,6 +834,9 @@
     $("#sendGlobal").onclick = async ()=>{ const text=$("#globalMsg").value.trim(); if (!text) return; try{ if (!state.userDoc) return openSheet(); await ensureAuth(); await addDoc(collection(db,"messages"), { bank: state.bank, type:"global", text, from: state.user?.name||"?", at: serverTimestamp() }); $("#globalMsg").value=""; }catch(e){ showToast(e.message||"Fehler"); } };
     $("#sendPrivate").onclick = async ()=>{ const to=$("#pmTo").value.trim(); const text=$("#privateMsg").value.trim(); if (!to||!text) return; try{ if (!state.userDoc) return openSheet(); await ensureAuth(); await addDoc(collection(db,"messages"), { bank: state.bank, type:"private", to, text, from: state.user?.name||"?", at: serverTimestamp() }); $("#privateMsg").value=""; }catch(e){ showToast(e.message||"Fehler"); } };
 
+    $("#tabGlobal").onclick = ()=>{ $("#tabGlobal").classList.add("active"); $("#tabPrivate").classList.remove("active"); $("#chatGlobal").classList.remove("hidden"); $("#chatPrivate").classList.add("hidden"); };
+    $("#tabPrivate").onclick = ()=>{ $("#tabPrivate").classList.add("active"); $("#tabGlobal").classList.remove("active"); $("#chatPrivate").classList.remove("hidden"); $("#chatGlobal").classList.add("hidden"); };
+
     // ----------- Bereich Navigation -----------
     function showArea(id){
       ["bankArea","slotsArea","houseArea","chatArea"].forEach(x=> $("#"+x).classList.add("hidden"));
@@ -885,7 +854,7 @@
     $("#btnHouse").onclick = ()=> requireLoginThen("houseArea");
     $("#btnChat").onclick  = ()=> requireLoginThen("chatArea");
 
-    renderHouses({}); // defined in previous versions – if houses code not present, it will be later in your integrated file.
+    renderHouses({});
   </script>
 </body>
 </html>
