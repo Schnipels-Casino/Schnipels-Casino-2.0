@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
-  <title>Friends Bank – Mobile v3.4 (Slots Anti-Spam + CS:GO Case)</title>
+  <title>Friends Bank – Mobile v3.5 (Triple Chance Jackpot)</title>
   <meta name="theme-color" content="#ffffff">
   <style>
     :root{
@@ -49,7 +49,16 @@
     .slot-grid{display:grid;grid-template-columns:repeat(3,74px);grid-auto-rows:74px;gap:10px;justify-content:center;align-content:center}
     .slot-cell{display:flex;align-items:center;justify-content:center;border:2px solid var(--outline);border-radius:12px;background:#f2f6ff;font-size:30px;transition:transform .12s;box-shadow:var(--shadow)}
     .slot-cell.spin{transform:scale(1.05)}
-    footer.nav{position:fixed;left:0;right:0;bottom:0;padding:.6rem;background:#ffffffee;border-top:1px solid var(--outline);display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;backdrop-filter:saturate(1.2) blur(6px)}
+    footer.nav{position:fixed;left:0;right:0;bottom:0;padding:.6rem;background:#ffffffee;border-top:1px solid var(--outline);display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;backdrop-filter:saturate(1.2) blur(6px);z-index:60}
+
+    /* Modal (Bank/Login) anchored at top */
+    .modal{position:fixed;inset:0;display:none;align-items:flex-start;justify-content:center;background:rgba(15,22,36,.12);backdrop-filter:blur(2px) saturate(1.1);z-index:1000}
+    .sheet{width:100%;max-width:880px;background:var(--card);border:1px solid var(--outline);border-radius:18px;box-shadow:var(--shadow);margin:72px 12px 18px;overflow:hidden}
+    .handle{width:46px;height:5px;background:#e5e7eb;border-radius:999px;margin:10px auto}
+
+    .chat-bubble{padding:.6rem .8rem;border:1px solid var(--outline);border-radius:12px;background:var(--pill);margin-bottom:.6rem}
+    .chat-bubble.mine{background:#e8f7ff;border-color:#3b82f6}
+
     .bank-choice .btn{border-width:2px}
     .bank-choice .btn.active{background:#e8f7ff;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.18) inset}
   </style>
@@ -200,6 +209,7 @@
 
       <div class="card">
         <div class="row between"><div class="section-title">Triple Chance</div><div id="tcStatus"></div></div>
+        <div class="row between" style="margin-bottom:.4rem"><small>Jackpot</small><b id="tcJackpot">—</b></div>
         <div class="center" style="margin:.4rem 0">
           <div class="slot-grid" id="slotGrid">
             <div class="slot-cell">🍋</div><div class="slot-cell">🍒</div><div class="slot-cell">🍇</div>
@@ -263,7 +273,7 @@
   </footer>
 
   <!-- Bank Sheet -->
-  <div id="sheetBank" class="modal" style="display:none;align-items:flex-end">
+  <div id="sheetBank" class="modal" style="display:none;align-items:flex-start">
     <div class="sheet">
       <div class="handle"></div>
       <div class="container" style="padding:10px 12px 18px">
@@ -350,10 +360,12 @@
     ensureAuth();
 
     // ---------- UI refs ----------
-    const bankSheet = $("#sheetBank"), bankLabel=$("#bankLabel"), bankBalance=$("#bankBalance"), cashLabel=$("#cashLabel"), acctBalance=$("#acctBalance"), stockPriceEl=$("#stockPrice"), stockBankName=$("#stockBankName"), bankFundsEl=$("#bankFunds"), userSharesEl=$("#userShares");
+    const bankSheet = $("#sheetBank"), bankLabel=$("#bankLabel"), bankBalance=$("#bankBalance"), cashLabel=$("#cashLabel"), acctBalance=$("#acctBalance"), stockPriceEl=$("#stockPrice"), stockBankName=$("#stockBankName"), bankFundsEl=$("#bankFunds"), userSharesEl=$("#userShares"), jackpotEl=$("#tcJackpot");
     const openSheet = ()=> bankSheet.style.display = "flex";
     const closeSheet = ()=> bankSheet.style.display = "none";
     $("#btnBank").onclick = openSheet; $("#closeBank").onclick = closeSheet;
+    bankSheet.addEventListener("click",(e)=>{ if(e.target===bankSheet) closeSheet(); });
+
     setTimeout(()=>showToast("Tipp: Tippe links oben auf 💶, um deine Bank zu wählen."), 600);
 
     // Bank choice
@@ -420,6 +432,7 @@
       $("#userShares").textContent = "0";
       $("#rentInfo").textContent = "";
       $("#feed").textContent = "";
+      if (jackpotEl) jackpotEl.textContent = "—";
       showToast("Abgemeldet. Du kannst nun eine (andere) Bank und einen neuen Namen wählen.");
       openSheet();
     };
@@ -450,13 +463,17 @@
       const bRef = doc(db, "banks", id);
       const snap = await getDoc(bRef);
       if (!snap.exists()){
-        await setDoc(bRef, { name: state.bank, funds: 1_000_000_000, stockPrice: 100, lastStockUpdate: Date.now() });
+        await setDoc(bRef, { name: state.bank, funds: 1_000_000_000, stockPrice: 100, lastStockUpdate: Date.now(), jackpotTC: 0 });
+      }else{
+        const data = snap.data();
+        if (data.jackpotTC === undefined){ await updateDoc(bRef, { jackpotTC: 0 }); }
       }
       state.bankDoc = bRef;
       const unsub = onSnapshot(bRef, (d)=>{
         const b = d.data(); if (!b) return;
         bankFundsEl.textContent = EUR(b.funds||0);
         stockPriceEl.textContent = EUR(b.stockPrice||0);
+        if (jackpotEl) jackpotEl.textContent = EUR(b.jackpotTC||0);
       });
       state.listeners.push(unsub);
     }
@@ -495,7 +512,7 @@
 
     async function txUpdate(cb){ await ensureAuth(); return await runTransaction(db, cb); }
 
-    // Ein-/Auszahlen
+    // -------- Ein-/Auszahlen ----------
     $("#btnDeposit").onclick = async ()=>{
       try{
         if (!state.userDoc) return openSheet();
@@ -521,7 +538,7 @@
       }catch(e){ showToast(e.message||"Fehler"); }
     };
 
-    // Bonus / Leihe / Kredit
+    // -------- Bonus / Leihe / Kredit ----------
     $("#btnClaimDaily").onclick = async ()=>{
       if (!state.userDoc){ openSheet(); return; }
       try{
@@ -601,60 +618,44 @@
       }catch(e){ showToast(e.message||"Fehler"); }
     };
 
-    // Aktien
-    $("#btnBuyShares").onclick = async ()=>{
+    // --------- Slots helpers (cash/bank moves) ----------
+    async function spendStakeSplit(amount){
       if (!state.userDoc) return openSheet();
-      const qty = Math.trunc(Number($("#sharesQty").value||0)); if (qty<=0) return;
-      try{
-        await txUpdate(async (tx)=>{
-          const u = await tx.get(state.userDoc); const b = await tx.get(state.bankDoc);
-          const ud = u.data(); const bd = b.data();
-          const price = b.data().stockPrice||100;
-          const cost = Math.round(price*qty*100)/100;
-          if ((ud.bankBalance||0) < cost) throw new Error("Zu wenig Guthaben.");
-          tx.update(state.userDoc, { bankBalance:(ud.bankBalance||0)-cost, shares:(ud.shares||0)+qty });
-          tx.update(state.bankDoc, { funds:(bd.funds||0)+cost });
+      await txUpdate(async (tx)=>{
+        const u = await tx.get(state.userDoc);
+        const b = await tx.get(state.bankDoc);
+        const ud = u.data(); const bd = b.data();
+        if ((ud.cash||0) < amount) throw new Error("Zu wenig Bargeld. Bitte auszahlen.");
+        const half = Math.round((amount/2)*100)/100;
+        tx.update(state.userDoc, { cash:(ud.cash||0) - amount });
+        tx.update(state.bankDoc, {
+          funds: (bd.funds||0) + half,
+          jackpotTC: (bd.jackpotTC||0) + half
         });
-        await logFeed("Aktienkauf: +"+qty+" Stk."); showToast("Gekauft: "+qty+" Stk.");
-      }catch(e){ showToast(e.message||"Fehler"); }
-    };
-    $("#btnSellShares").onclick = async ()=>{
+      });
+    }
+    async function payoutCash(amount){
       if (!state.userDoc) return openSheet();
-      const qty = Math.trunc(Number($("#sharesQty").value||0)); if (qty<=0) return;
-      try{
-        await txUpdate(async (tx)=>{
-          const u = await tx.get(state.userDoc); const b = await tx.get(state.bankDoc);
-          const ud = u.data(); const bd = b.data();
-          const price = b.data().stockPrice||100;
-          if ((ud.shares||0) < qty) throw new Error("Nicht genug Anteile.");
-          const proceeds = Math.round(price*qty*100)/100;
-          tx.update(state.userDoc, { bankBalance:(ud.bankBalance||0)+proceeds, shares:(ud.shares||0)-qty });
-          tx.update(state.bankDoc, { funds:(bd.funds||0)-proceeds });
-        });
-        await logFeed("Aktienverkauf: -"+qty+" Stk."); showToast("Verkauft: "+qty+" Stk.");
-      }catch(e){ showToast(e.message||"Fehler"); }
-    };
+      await txUpdate(async (tx)=>{
+        const u = await tx.get(state.userDoc); const b = await tx.get(state.bankDoc);
+        const ud = u.data(); const bd = b.data();
+        tx.update(state.userDoc,{cash:(ud.cash||0)+amount});
+        tx.update(state.bankDoc,{funds:(bd.funds||0)-amount});
+      });
+    }
+    async function payoutJackpot(){
+      await txUpdate(async (tx)=>{
+        const u = await tx.get(state.userDoc);
+        const b = await tx.get(state.bankDoc);
+        const ud = u.data(); const bd = b.data();
+        const jp = Math.round((bd.jackpotTC||0)*100)/100;
+        if (jp <= 0) return;
+        tx.update(state.userDoc, { cash:(ud.cash||0)+jp });
+        tx.update(state.bankDoc, { jackpotTC: 0 });
+      });
+    }
 
-    // Häuser (Demo)
-    const HOUSES = [
-      { id:"h1", name:"Klein Familien Haus", price:50_000, rent:2_500 },
-      { id:"h2", name:"Mittel Familien Haus", price:75_000, rent:4_000 },
-      { id:"h3", name:"Groß Familien Haus", price:100_000, rent:6_000 },
-      { id:"h4", name:"Dubai Villa", price:450_000, rent:15_000 },
-      { id:"h5", name:"Luxus Villa", price:1_000_000, rent:50_000 }
-    ];
-    function renderHouses(u){ const wrap=$("#houseList"); wrap.innerHTML=""; HOUSES.forEach(h=>{ const owned=(u && u["own_"+h.id])||0; const el=document.createElement("div"); el.className="card"; el.innerHTML=`<div class="section-title">${h.name}</div><div class="row between"><small>Preis</small><b>${EUR(h.price)}</b></div><div class="row between"><small>Miete/Tag</small><b>${EUR(h.rent)}</b></div><div class="row between"><small>Besitz</small><b>${owned}</b></div><div class="row grid2" style="margin-top:.4rem"><button class="btn" data-buy="${h.id}">Kaufen</button><button class="btn" data-sell="${h.id}" ${owned?"":"disabled"}>Verkaufen</button></div>`; wrap.appendChild(el); }); $$("#houseList [data-buy]").forEach(b=> b.onclick = ()=> buyHouse(b.dataset.buy)); $$("#houseList [data-sell]").forEach(b=> b.onclick = ()=> sellHouse(b.dataset.sell)); }
-    async function buyHouse(hid){ if (!state.userDoc) return openSheet(); const h=HOUSES.find(x=>x.id===hid); if(!h) return; try{ await txUpdate(async(tx)=>{ const u=await tx.get(state.userDoc); const b=await tx.get(state.bankDoc); const ud=u.data(); const bd=b.data(); if((ud.bankBalance||0)<h.price) throw new Error("Zu wenig Guthaben."); const patch={}; patch["own_"+hid]=(ud["own_"+hid]||0)+1; tx.update(state.userDoc, Object.assign(patch,{bankBalance:(ud.bankBalance||0)-h.price})); tx.update(state.bankDoc,{funds:(bd.funds||0)+h.price}); }); await logFeed("Gekauft: "+h.name+" für "+EUR(h.price)); showToast("Gekauft: "+h.name);}catch(e){ showToast(e.message||"Fehler"); }}
-    async function sellHouse(hid){ if (!state.userDoc) return openSheet(); const h=HOUSES.find(x=>x.id===hid); if(!h) return; try{ await txUpdate(async(tx)=>{ const u=await tx.get(state.userDoc); const b=await tx.get(state.bankDoc); const ud=u.data(); const bd=b.data(); if((ud["own_"+hid]||0)<=0) throw new Error("Kein Besitz."); const patch={}; patch["own_"+hid]=(ud["own_"+hid]||0)-1; const refund=Math.round(h.price*0.8); tx.update(state.userDoc, Object.assign(patch,{bankBalance:(ud.bankBalance||0)+refund})); tx.update(state.bankDoc,{funds:(bd.funds||0)-refund}); }); await logFeed("Verkauft: "+h.name+" für "+EUR(h.price*0.8)); showToast("Verkauft: "+h.name);}catch(e){ showToast(e.message||"Fehler"); }}
-
-    // ------- Slots -------
-    const SYMBOLS = ["🍋","🍒","🍇","🍀","⭐","🔔","7️⃣","🍉"];
-    const stakes = [5,10,30,50,80,100];
-    function parseStake(selId){ return stakes.includes(Number($(selId).value)) ? Number($(selId).value) : 5; }
-    async function spendCash(amount){ if (!state.userDoc) return openSheet(); await txUpdate(async (tx)=>{ const u=await tx.get(state.userDoc); const b=await tx.get(state.bankDoc); const ud=u.data(); const bd=b.data(); if((ud.cash||0)<amount) throw new Error("Zu wenig Bargeld. Bitte auszahlen."); tx.update(state.userDoc,{cash:(ud.cash||0)-amount}); tx.update(state.bankDoc,{funds:(bd.funds||0)+amount}); }); }
-    async function payoutCash(amount){ if (!state.userDoc) return openSheet(); await txUpdate(async (tx)=>{ const u=await tx.get(state.userDoc); const b=await tx.get(state.bankDoc); const ud=u.data(); const bd=b.data(); tx.update(state.userDoc,{cash:(ud.cash||0)+amount}); tx.update(state.bankDoc,{funds:(bd.funds||0)-amount}); }); }
-
-    // High/Lower
+    // ------- High/Lower -------
     let hlBusy=false;
     $("#btnHigher").onclick = ()=> { if (!slotGuard()) return; playHL("higher"); };
     $("#btnLower").onclick  = ()=> { if (!slotGuard()) return; playHL("lower");  };
@@ -665,7 +666,14 @@
       quickStatus($("#hlStatus"), "… wird geprüft");
       const stake = parseStake("#stakeHL");
       try{
-        await spendCash(stake);
+        // HL nutzt vollständigen Einsatz -> Bankfonds
+        await txUpdate(async (tx)=>{
+          const u=await tx.get(state.userDoc); const b=await tx.get(state.bankDoc);
+          const ud=u.data(); const bd=b.data();
+          if((ud.cash||0) < stake) throw new Error("Zu wenig Bargeld. Bitte auszahlen.");
+          tx.update(state.userDoc,{cash:(ud.cash||0)-stake});
+          tx.update(state.bankDoc,{funds:(bd.funds||0)+stake});
+        });
         const dealer = 1+Math.floor(Math.random()*13);
         const you    = 1+Math.floor(Math.random()*13);
         $("#hlDealer").textContent = cardEmoji(dealer);
@@ -680,7 +688,7 @@
     }
     function cardEmoji(v){ const faces = {1:"A",11:"J",12:"Q",13:"K"}; return "🂠"+(faces[v]||String(v)); }
 
-    // Coinflip
+    // ------- Coinflip -------
     let cfBusy=false;
     $("#btnCF").onclick = async ()=>{
       if (!slotGuard()) return;
@@ -691,7 +699,14 @@
       setSlotsDisabled(true);
       const stake = parseStake("#stakeCF");
       try{
-        await spendCash(stake);
+        // CF vollständiger Einsatz -> Bankfonds
+        await txUpdate(async (tx)=>{
+          const u=await tx.get(state.userDoc); const b=await tx.get(state.bankDoc);
+          const ud=u.data(); const bd=b.data();
+          if((ud.cash||0) < stake) throw new Error("Zu wenig Bargeld. Bitte auszahlen.");
+          tx.update(state.userDoc,{cash:(ud.cash||0)-stake});
+          tx.update(state.bankDoc,{funds:(bd.funds||0)+stake});
+        });
         const pick = $("#cfPick").value;
         const res = Math.random()<.5?"kopf":"zahl";
         $("#cfResult").textContent = res==="kopf"?"🙂":"🪙";
@@ -703,7 +718,11 @@
       setTimeout(()=>setSlotsDisabled(false), SLOT_MIN_INTERVAL);
     };
 
-    // Triple Chance
+    // ------- Triple Chance (mit Jackpot) -------
+    const SYMBOLS = ["🍋","🍒","🍇","🍀","⭐","🔔","7️⃣","🍉"];
+    const stakes = [5,10,30,50,80,100];
+    function parseStake(selId){ return stakes.includes(Number($(selId).value)) ? Number($(selId).value) : 5; }
+
     let tcBusy=false, tcLock=false;
     $("#btnSpin").onclick = ()=>{
       if (!slotGuard()) return;
@@ -720,21 +739,35 @@
       tcBusy=false;
       setTimeout(()=>setSlotsDisabled(false), SLOT_MIN_INTERVAL);
     };
+
     async function spinOnce(fromAuto=false){
       if (!state.userDoc){ openSheet(); return; }
       if (tcLock) return; tcLock=true;
       const stake = parseStake("#stakeTC");
       try{
         if (!fromAuto) quickStatus($("#tcStatus"), "… dreht");
-        await spendCash(stake);
+        // Einsatz wird geteilt: 50% Jackpot, 50% Bankfonds
+        await spendStakeSplit(stake);
+
         const grid = $("#slotGrid").children;
         const picks=[];
         for (let i=0;i<9;i++){ const sym = SYMBOLS[Math.floor(Math.random()*SYMBOLS.length)]; picks.push(sym); }
         for (let i=0;i<9;i++){ grid[i].classList.add("spin"); grid[i].textContent = picks[i]; await sleep(45); grid[i].classList.remove("spin"); }
+
+        // Linien-Gewinne (bleiben wie gehabt)
         const lines=[[0,1,2],[3,4,5],[6,7,8],[0,4,8],[6,4,2]];
         let wins=0; lines.forEach(L=>{ if (picks[L[0]]===picks[L[1]] && picks[L[1]]===picks[L[2]]) wins++; });
         if (wins>0){ const payout = stake*3*wins; await payoutCash(payout); $("#tcStatus").textContent = `Gewinn ${EUR(payout)} (${wins} Linie${wins>1?"n":""})`; await logFeed(`TripleChance Gewinn: ${EUR(payout)} (${wins} Linien)`); }
         else { $("#tcStatus").textContent = `Verlust ${EUR(stake)}`; await logFeed(`TripleChance Verlust: ${EUR(stake)}`); }
+
+        // JACKPOT bei Vollbild (alle 9 identisch)
+        const full = picks.every(s => s === picks[0]);
+        if (full){
+          await payoutJackpot();
+          await logFeed("🎉 TripleChance JACKPOT (Vollbild) ausgezahlt!");
+          showToast("🎉 JACKPOT! Vollbild!");
+        }
+
         setTimeout(()=>$("#tcStatus").textContent="", 1400);
       }catch(e){ showToast(e.message||"Fehler"); }
       tcLock=false;
@@ -762,7 +795,13 @@
       if (!state.userDoc) return openSheet();
       const stake = stakeCase();
       try{
-        await spendCash(stake); // Einsatz ➜ Bankfonds
+        await txUpdate(async (tx)=>{
+          const u=await tx.get(state.userDoc); const b=await tx.get(state.bankDoc);
+          const ud=u.data(); const bd=b.data();
+          if((ud.cash||0) < stake) throw new Error("Zu wenig Bargeld. Bitte auszahlen.");
+          tx.update(state.userDoc,{cash:(ud.cash||0)-stake});
+          tx.update(state.bankDoc,{funds:(bd.funds||0)+stake});
+        });
         $("#caseStatus").textContent = "Kiste gekauft.";
         await logFeed(`CS:GO-Kiste (${CASE_ID}) gekauft: Einsatz ${EUR(stake)}`);
       }catch(e){ showToast(e.message||"Fehler"); }
@@ -771,11 +810,10 @@
       if (!state.userDoc) return openSheet();
       const stake = stakeCase();
       try{
-        // Öffnen kostet nichts zusätzlich; Gewinn kommt aus Bankfonds
         const drop = pickWeighted();
         const win  = Math.round(stake * drop.multiplier);
         $("#casePrize").textContent = `Drop: ${drop.name} (${drop.multiplier}×) • Gewinn ${EUR(win)}`;
-        if (win>0) await payoutCash(win); // Auszahlung aus Bankfonds an User
+        if (win>0) await payoutCash(win);
         await logFeed(`CS:GO-Kiste geöffnet (${CASE_ID}): ${drop.name}, Gewinn ${EUR(win)}`);
       }catch(e){ showToast(e.message||"Fehler"); }
     }
