@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
-  <title>Friends Bank – Mobile v3.3 (Bright + Auth + CSGO Case)</title>
+  <title>Friends Bank – Mobile v3.4 (Slots Anti-Spam + CS:GO Case)</title>
   <meta name="theme-color" content="#ffffff">
   <style>
     :root{
@@ -46,11 +46,6 @@
     .gridAuto{display:grid;grid-template-columns:1fr;gap:.8rem}
     @media (min-width:720px){.grid2{grid-template-columns:1fr 1fr}.grid3{grid-template-columns:repeat(3,1fr)}.gridAuto{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}}
     .toast{position:fixed;bottom:14px;left:0;right:0;margin:auto;max-width:560px;padding:1rem 1.1rem;border-radius:12px;background:#0f1624;color:#fff;border:1px solid #1f2a40;box-shadow:0 10px 30px rgba(15,22,36,.25);text-align:center}
-    .modal{position:fixed;inset:0;background:rgba(15,22,36,.4);display:none;align-items:flex-end}
-    .sheet{background:var(--card);border-top-left-radius:18px;border-top-right-radius:18px;width:100%;max-height:88vh;overflow:auto;border-top:1px solid var(--outline);box-shadow:0 -10px 24px rgba(15,22,36,.08)}
-    .sheet .handle{width:54px;height:6px;background:#d9deea;border-radius:100px;margin:10px auto}
-    .chat-bubble{padding:.7rem .9rem;border-radius:12px;border:1px solid var(--outline);max-width:85%;background:#f7faff}
-    .mine{background:#e5ffe5;border-color:#c7f3c7}
     .slot-grid{display:grid;grid-template-columns:repeat(3,74px);grid-auto-rows:74px;gap:10px;justify-content:center;align-content:center}
     .slot-cell{display:flex;align-items:center;justify-content:center;border:2px solid var(--outline);border-radius:12px;background:#f2f6ff;font-size:30px;transition:transform .12s;box-shadow:var(--shadow)}
     .slot-cell.spin{transform:scale(1.05)}
@@ -98,8 +93,8 @@
         <div class="card">
           <div class="section-title">Leihen & Kredit</div>
           <ul style="margin:.2rem 0 .2rem 1rem">
-            <li>Leihen: <b>€1.000/Tag</b>, max. <b>€10.000</b>, <b>10% Zinsen</b>.</li>
-            <li>Kredit: bis <b>€100.000</b>, mind. <b>€1.000/Tag</b> Rückzahlung.</li>
+            <li>Leihen: <b>€1.000/Tag</b>, max. <b>€10.000</b>, <b>10% Gebühr</b>.</li>
+            <li>Kredit: bis <b>€100.000</b>, Rückzahlung in 1.000er-Schritten.</li>
           </ul>
         </div>
       </div>
@@ -168,13 +163,14 @@
 
       <div class="card">
         <div class="section-title">Verlauf</div>
-        <div id="feed" class="mono" style="max-height:38vh;overflow:auto"></div>
+        <div id="feed" class="mono" style="max-height:38vh;overflow:auto;white-space:pre-line"></div>
       </div>
     </div>
 
     <div id="slotsArea" class="card hidden">
       <div class="section-title">Slots 🎰</div>
       <small>Einsätze: 5 / 10 / 30 / 50 / 80 / 100 € (vom Bargeld)</small>
+
       <div class="card">
         <div class="row between"><div class="section-title">High or Lower</div><div id="hlStatus"></div></div>
         <div class="grid3 center" style="gap:10px">
@@ -218,28 +214,16 @@
         </div>
       </div>
 
-      <!-- CSGO CASE: Kauf & Öffnen -->
       <div class="card">
-        <div class="row between">
-          <div class="section-title">CS:GO Kiste</div>
-          <small>ID: <code id="caseId">case_csg_001</code></small>
+        <div class="row between"><div class="section-title">CS:GO-Kiste</div><div id="caseStatus"></div></div>
+        <div class="row between"><small>ID:</small><code id="caseId">case_csg_001</code></div>
+        <div class="row" style="gap:.6rem">
+          <select id="stakeCASE"><option>5</option><option>10</option><option>30</option><option>50</option><option>80</option><option>100</option></select>
+          <button id="btnBuyCase" class="btn">Kiste kaufen</button>
+          <button id="btnOpenCase" class="btn primary">Kiste öffnen</button>
         </div>
-
-        <div class="row between" style="gap:.6rem">
-          <div><small>Preis</small><br><b>€<span id="casePrice">50</span></b></div>
-          <div><small>Deine Kisten</small><br><b id="caseOwned">0</b></div>
-          <div class="row" style="gap:.6rem">
-            <button id="btnBuyCase"  class="btn">Kiste kaufen</button>
-            <button id="btnOpenCase" class="btn primary">Kiste öffnen</button>
-          </div>
-        </div>
-
-        <details style="margin-top:.5rem">
-          <summary>Drop-Chancen & Gewinne</summary>
-          <ul style="margin:.4rem 0 .2rem 1rem" id="caseTable"></ul>
-        </details>
-
-        <small id="caseResult"></small>
+        <small>Der Einsatz geht in die Bankfonds. Gewinne werden aus den Bankfonds bezahlt.</small>
+        <div id="casePrize" class="section-title" style="margin-top:.4rem"></div>
       </div>
     </div>
 
@@ -247,7 +231,7 @@
       <div class="section-title">Häuser & Mieten 🏠</div>
       <div class="gridAuto" id="houseList"></div>
       <div class="row between">
-        <button id="btnCollectRent" class="btn primary">Tagesmieten einsammeln</button>
+        <button id="btnCollectRent" class="btn primary" disabled>Tagesmieten einsammeln (Demo)</button>
         <small id="rentInfo"></small>
       </div>
     </div>
@@ -279,7 +263,7 @@
   </footer>
 
   <!-- Bank Sheet -->
-  <div id="sheetBank" class="modal">
+  <div id="sheetBank" class="modal" style="display:none;align-items:flex-end">
     <div class="sheet">
       <div class="handle"></div>
       <div class="container" style="padding:10px 12px 18px">
@@ -315,19 +299,41 @@
     import { getAuth, signInAnonymously, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, addDoc, serverTimestamp, query, where, orderBy, limit, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
+    // ---- Firebase (deine Daten) ----
     const firebaseConfig = { apiKey: "AIzaSyDN1MZv_q38Zoymt92BHWTe9sUNwteT1KA", authDomain: "sample-firebase-ai-app-b02a4.firebaseapp.com", projectId: "sample-firebase-ai-app-b02a4", storageBucket: "sample-firebase-ai-app-b02a4.firebasestorage.app", messagingSenderId: "382050648468", appId: "1:382050648468:web:8c6f34051a7b2991ebcf81" };
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
+    // ---- Helpers / State ----
     const $ = s => document.querySelector(s);
     const $$ = s => Array.from(document.querySelectorAll(s));
     const sleep = ms => new Promise(r=>setTimeout(r,ms));
     const EUR = n => "€" + (Math.round(n*100)/100).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const todayDE = () => new Date().toLocaleDateString("de-DE",{ timeZone:"Europe/Berlin" });
-    const hash = async (s)=>{ const enc = new TextEncoder().encode(s); const buf = await crypto.subtle.digest("SHA-256", enc); return Array.from(new Uint8Array(buf)).map(b=>b.toString(16),0).join(""); };
-    const showToast = (m)=>{ const t=$("#toast"); t.textContent=m; t.classList.remove("hidden"); setTimeout(()=>t.classList.add("hidden"), 2400); };
-    const logFeed = async (txt)=>{ $("#feed").prepend(document.createTextNode("• "+txt+"\n")); if (state.userDoc) await addDoc(collection(db, "users", state.userDoc.id, "feed"), { txt, at: serverTimestamp() }); };
+    const hash = async (s)=>{ const enc = new TextEncoder().encode(s); const buf = await crypto.subtle.digest("SHA-256", enc); return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join(""); };
+    const showToast = (m)=>{ const t=$("#toast"); t.textContent=m; t.classList.remove("hidden"); setTimeout(()=>t.classList.add("hidden"), 2200); };
+    const logFeed = async (txt)=>{ $("#feed").prepend("• "+txt+"\\n"); if (state.userDoc) await addDoc(collection(db, "users", state.userDoc.id, "feed"), { txt, at: serverTimestamp() }); };
     const state = { bank:null, user:null, userDoc:null, bankDoc:null, listeners:[], tcRunning:false, authed:false };
+
+    // ---- Slots Rate-Limit & UI-Helpers ----
+    const SLOT_MIN_INTERVAL = 2000; // 2s zwischen Slot-Aktionen (HL/CF/Triple/CASE). Für 1s => 1000
+    let lastSlotAction = 0;
+    function slotGuard() {
+      const now = Date.now();
+      const diff = now - lastSlotAction;
+      if (diff < SLOT_MIN_INTERVAL) {
+        const wait = Math.ceil((SLOT_MIN_INTERVAL - diff) / 1000);
+        showToast(`Bitte noch ${wait}s warten…`);
+        return false;
+      }
+      lastSlotAction = now;
+      return true;
+    }
+    function setSlotsDisabled(disabled) {
+      ["#btnHigher","#btnLower","#btnCF","#btnSpin","#btnAuto10","#btnBuyCase","#btnOpenCase"]
+        .forEach(sel => { const el = document.querySelector(sel); if (el) el.disabled = disabled; });
+    }
+    function quickStatus(el, text) { if (el) { el.textContent = text; setTimeout(()=>{ if (el.textContent===text) el.textContent=""; }, 1200); } }
 
     // ---------- AUTH (anonymous) ----------
     const auth = getAuth(app);
@@ -405,7 +411,6 @@
       finally{ btn.disabled = false; btn.textContent = oldTxt; }
     };
 
-    // Logout / Konto wechseln
     $("#btnLogout").onclick = ()=>{
       state.listeners.forEach(u=>u()); state.listeners=[];
       state.user = null; state.userDoc = null;
@@ -433,8 +438,6 @@
         userSharesEl.textContent = (u.shares||0);
         $("#rentInfo").textContent = u.lastRent ? ("Letzte Miete: "+u.lastRent) : "Noch keine Miete kassiert";
         renderHouses(u);
-        // <<< Neu: Kisten-Bestand live spiegeln
-        updateCaseOwned(u);
       });
       state.listeners.push(unsub);
       await ensureBankDoc(); await ensureTicker(); await loadFeed(); await attachChat();
@@ -481,7 +484,7 @@
       const q = query(collection(db, "users", state.userDoc.id, "feed"), orderBy("at","desc"), limit(50));
       onSnapshot(q, (qs)=>{
         const el = $("#feed"); el.textContent = "";
-        qs.forEach(doc=> el.append("• "+doc.data().txt+"\n") );
+        qs.forEach(doc=> el.append("• "+doc.data().txt+"\\n") );
       });
     }
 
@@ -492,6 +495,7 @@
 
     async function txUpdate(cb){ await ensureAuth(); return await runTransaction(db, cb); }
 
+    // Ein-/Auszahlen
     $("#btnDeposit").onclick = async ()=>{
       try{
         if (!state.userDoc) return openSheet();
@@ -517,6 +521,7 @@
       }catch(e){ showToast(e.message||"Fehler"); }
     };
 
+    // Bonus / Leihe / Kredit
     $("#btnClaimDaily").onclick = async ()=>{
       if (!state.userDoc){ openSheet(); return; }
       try{
@@ -596,6 +601,7 @@
       }catch(e){ showToast(e.message||"Fehler"); }
     };
 
+    // Aktien
     $("#btnBuyShares").onclick = async ()=>{
       if (!state.userDoc) return openSheet();
       const qty = Math.trunc(Number($("#sharesQty").value||0)); if (qty<=0) return;
@@ -629,6 +635,7 @@
       }catch(e){ showToast(e.message||"Fehler"); }
     };
 
+    // Häuser (Demo)
     const HOUSES = [
       { id:"h1", name:"Klein Familien Haus", price:50_000, rent:2_500 },
       { id:"h2", name:"Mittel Familien Haus", price:75_000, rent:4_000 },
@@ -640,17 +647,22 @@
     async function buyHouse(hid){ if (!state.userDoc) return openSheet(); const h=HOUSES.find(x=>x.id===hid); if(!h) return; try{ await txUpdate(async(tx)=>{ const u=await tx.get(state.userDoc); const b=await tx.get(state.bankDoc); const ud=u.data(); const bd=b.data(); if((ud.bankBalance||0)<h.price) throw new Error("Zu wenig Guthaben."); const patch={}; patch["own_"+hid]=(ud["own_"+hid]||0)+1; tx.update(state.userDoc, Object.assign(patch,{bankBalance:(ud.bankBalance||0)-h.price})); tx.update(state.bankDoc,{funds:(bd.funds||0)+h.price}); }); await logFeed("Gekauft: "+h.name+" für "+EUR(h.price)); showToast("Gekauft: "+h.name);}catch(e){ showToast(e.message||"Fehler"); }}
     async function sellHouse(hid){ if (!state.userDoc) return openSheet(); const h=HOUSES.find(x=>x.id===hid); if(!h) return; try{ await txUpdate(async(tx)=>{ const u=await tx.get(state.userDoc); const b=await tx.get(state.bankDoc); const ud=u.data(); const bd=b.data(); if((ud["own_"+hid]||0)<=0) throw new Error("Kein Besitz."); const patch={}; patch["own_"+hid]=(ud["own_"+hid]||0)-1; const refund=Math.round(h.price*0.8); tx.update(state.userDoc, Object.assign(patch,{bankBalance:(ud.bankBalance||0)+refund})); tx.update(state.bankDoc,{funds:(bd.funds||0)-refund}); }); await logFeed("Verkauft: "+h.name+" für "+EUR(h.price*0.8)); showToast("Verkauft: "+h.name);}catch(e){ showToast(e.message||"Fehler"); }}
 
+    // ------- Slots -------
     const SYMBOLS = ["🍋","🍒","🍇","🍀","⭐","🔔","7️⃣","🍉"];
     const stakes = [5,10,30,50,80,100];
     function parseStake(selId){ return stakes.includes(Number($(selId).value)) ? Number($(selId).value) : 5; }
     async function spendCash(amount){ if (!state.userDoc) return openSheet(); await txUpdate(async (tx)=>{ const u=await tx.get(state.userDoc); const b=await tx.get(state.bankDoc); const ud=u.data(); const bd=b.data(); if((ud.cash||0)<amount) throw new Error("Zu wenig Bargeld. Bitte auszahlen."); tx.update(state.userDoc,{cash:(ud.cash||0)-amount}); tx.update(state.bankDoc,{funds:(bd.funds||0)+amount}); }); }
     async function payoutCash(amount){ if (!state.userDoc) return openSheet(); await txUpdate(async (tx)=>{ const u=await tx.get(state.userDoc); const b=await tx.get(state.bankDoc); const ud=u.data(); const bd=b.data(); tx.update(state.userDoc,{cash:(ud.cash||0)+amount}); tx.update(state.bankDoc,{funds:(bd.funds||0)-amount}); }); }
 
+    // High/Lower
     let hlBusy=false;
-    $("#btnHigher").onclick = ()=> playHL("higher");
-    $("#btnLower").onclick  = ()=> playHL("lower");
+    $("#btnHigher").onclick = ()=> { if (!slotGuard()) return; playHL("higher"); };
+    $("#btnLower").onclick  = ()=> { if (!slotGuard()) return; playHL("lower");  };
     async function playHL(choice){
-      if (hlBusy || !state.userDoc) { if (!state.userDoc) openSheet(); return; } hlBusy = true;
+      if (hlBusy || !state.userDoc) { if (!state.userDoc) openSheet(); return; }
+      hlBusy = true;
+      setSlotsDisabled(true);
+      quickStatus($("#hlStatus"), "… wird geprüft");
       const stake = parseStake("#stakeHL");
       try{
         await spendCash(stake);
@@ -664,14 +676,19 @@
         setTimeout(()=>$("#hlStatus").textContent="", 1500);
       }catch(e){ showToast(e.message||"Fehler"); }
       hlBusy=false;
+      setTimeout(()=>setSlotsDisabled(false), SLOT_MIN_INTERVAL);
     }
     function cardEmoji(v){ const faces = {1:"A",11:"J",12:"Q",13:"K"}; return "🂠"+(faces[v]||String(v)); }
 
+    // Coinflip
     let cfBusy=false;
     $("#btnCF").onclick = async ()=>{
+      if (!slotGuard()) return;
       if (cfBusy){ return; }
       if (!state.userDoc){ openSheet(); return; }
       cfBusy=true;
+      quickStatus($("#cfStatus"), "… wird geworfen");
+      setSlotsDisabled(true);
       const stake = parseStake("#stakeCF");
       try{
         await spendCash(stake);
@@ -683,21 +700,32 @@
         setTimeout(()=>$("#cfStatus").textContent="", 1500);
       }catch(e){ showToast(e.message||"Fehler"); }
       cfBusy=false;
+      setTimeout(()=>setSlotsDisabled(false), SLOT_MIN_INTERVAL);
     };
 
+    // Triple Chance
     let tcBusy=false, tcLock=false;
-    $("#btnSpin").onclick = ()=> spinOnce();
+    $("#btnSpin").onclick = ()=>{
+      if (!slotGuard()) return;
+      quickStatus($("#tcStatus"), "… dreht");
+      setSlotsDisabled(true);
+      spinOnce().finally(()=> setTimeout(()=>setSlotsDisabled(false), SLOT_MIN_INTERVAL));
+    };
     $("#btnAuto10").onclick = async ()=>{
-      if (tcBusy) return; if (!state.userDoc){ openSheet(); return; }
+      if (!slotGuard()) return;
+      if (!state.userDoc){ openSheet(); return; }
+      setSlotsDisabled(true);
       tcBusy=true;
       for (let i=0;i<10;i++){ await spinOnce(true); await sleep(160); }
       tcBusy=false;
+      setTimeout(()=>setSlotsDisabled(false), SLOT_MIN_INTERVAL);
     };
-    async function spinOnce(){
+    async function spinOnce(fromAuto=false){
       if (!state.userDoc){ openSheet(); return; }
       if (tcLock) return; tcLock=true;
       const stake = parseStake("#stakeTC");
       try{
+        if (!fromAuto) quickStatus($("#tcStatus"), "… dreht");
         await spendCash(stake);
         const grid = $("#slotGrid").children;
         const picks=[];
@@ -712,6 +740,51 @@
       tcLock=false;
     }
 
+    // ------- CS:GO CASE (ID: case_csg_001) -------
+    const CASE_ID = "case_csg_001";
+    $("#caseId").textContent = CASE_ID;
+    const CASE_LOOT = [
+      { name:"Graues Item",  weight:62, multiplier:0.0 },
+      { name:"Blaues Item",  weight:28, multiplier:1.2 },
+      { name:"Lila Item",    weight:7.5, multiplier:2.5 },
+      { name:"Pink Item",    weight:2.0, multiplier:5.0 },
+      { name:"Rotes Item",   weight:0.45, multiplier:12.0 },
+      { name:"Gold (Knife)", weight:0.05, multiplier:48.0 },
+    ];
+    function stakeCase(){ return parseStake("#stakeCASE"); }
+    function pickWeighted(){
+      const total = CASE_LOOT.reduce((s,x)=>s+x.weight,0);
+      let r = Math.random()*total;
+      for(const it of CASE_LOOT){ if((r-=it.weight)<=0) return it; }
+      return CASE_LOOT[0];
+    }
+    async function buyCase(){
+      if (!state.userDoc) return openSheet();
+      const stake = stakeCase();
+      try{
+        await spendCash(stake); // Einsatz ➜ Bankfonds
+        $("#caseStatus").textContent = "Kiste gekauft.";
+        await logFeed(`CS:GO-Kiste (${CASE_ID}) gekauft: Einsatz ${EUR(stake)}`);
+      }catch(e){ showToast(e.message||"Fehler"); }
+    }
+    async function openCase(){
+      if (!state.userDoc) return openSheet();
+      const stake = stakeCase();
+      try{
+        // Öffnen kostet nichts zusätzlich; Gewinn kommt aus Bankfonds
+        const drop = pickWeighted();
+        const win  = Math.round(stake * drop.multiplier);
+        $("#casePrize").textContent = `Drop: ${drop.name} (${drop.multiplier}×) • Gewinn ${EUR(win)}`;
+        if (win>0) await payoutCash(win); // Auszahlung aus Bankfonds an User
+        await logFeed(`CS:GO-Kiste geöffnet (${CASE_ID}): ${drop.name}, Gewinn ${EUR(win)}`);
+      }catch(e){ showToast(e.message||"Fehler"); }
+    }
+    const btnBuyCase = $("#btnBuyCase");
+    const btnOpenCase = $("#btnOpenCase");
+    if (btnBuyCase)  btnBuyCase.onclick  = ()=> { if (!slotGuard()) return; setSlotsDisabled(true); buyCase().finally(()=> setTimeout(()=>setSlotsDisabled(false), SLOT_MIN_INTERVAL)); };
+    if (btnOpenCase) btnOpenCase.onclick = ()=> { if (!slotGuard()) return; setSlotsDisabled(true); openCase().finally(()=> setTimeout(()=>setSlotsDisabled(false), SLOT_MIN_INTERVAL)); };
+
+    // ---- Chat (einfach) ----
     function attachChat(){
       const qg = query(collection(db,"messages"), where("bank","==",state.bank), where("type","==","global"), orderBy("at","desc"), limit(50));
       onSnapshot(qg, (qs)=>{
@@ -726,14 +799,13 @@
         });
       }
     }
-
     $("#sendGlobal").onclick = async ()=>{ const text=$("#globalMsg").value.trim(); if (!text) return; try{ if (!state.userDoc) return openSheet(); await ensureAuth(); await addDoc(collection(db,"messages"), { bank: state.bank, type:"global", text, from: state.user?.name||"?", at: serverTimestamp() }); $("#globalMsg").value=""; }catch(e){ showToast(e.message||"Fehler"); } };
     $("#sendPrivate").onclick = async ()=>{ const to=$("#pmTo").value.trim(); const text=$("#privateMsg").value.trim(); if (!to||!text) return; try{ if (!state.userDoc) return openSheet(); await ensureAuth(); await addDoc(collection(db,"messages"), { bank: state.bank, type:"private", to, text, from: state.user?.name||"?", at: serverTimestamp() }); $("#privateMsg").value=""; }catch(e){ showToast(e.message||"Fehler"); } };
 
     $("#tabGlobal").onclick = ()=>{ $("#tabGlobal").classList.add("active"); $("#tabPrivate").classList.remove("active"); $("#chatGlobal").classList.remove("hidden"); $("#chatPrivate").classList.add("hidden"); };
     $("#tabPrivate").onclick = ()=>{ $("#tabPrivate").classList.add("active"); $("#tabGlobal").classList.remove("active"); $("#chatPrivate").classList.remove("hidden"); $("#chatGlobal").classList.add("hidden"); };
 
-    // ----------- FIX: area switch helper -----------
+    // ----------- Bereich Navigation -----------
     function showArea(id){
       ["bankArea","slotsArea","houseArea","chatArea"].forEach(x=> $("#"+x).classList.add("hidden"));
       $("#"+id).classList.remove("hidden");
@@ -742,131 +814,15 @@
       if (!state.userDoc){ openSheet(); showToast("Bitte zuerst einloggen."); return; }
       showArea(areaId);
     }
-    // footer nav
     $("#navBank").onclick  = ()=> showArea("bankArea");
     $("#navSlots").onclick = ()=> requireLoginThen("slotsArea");
     $("#navHouse").onclick = ()=> requireLoginThen("houseArea");
     $("#navChat").onclick  = ()=> requireLoginThen("chatArea");
-    // topbar circles
     $("#btnSlots").onclick = ()=> requireLoginThen("slotsArea");
     $("#btnHouse").onclick = ()=> requireLoginThen("houseArea");
     $("#btnChat").onclick  = ()=> requireLoginThen("chatArea");
 
     renderHouses({});
-
-    /* ===================== CSGO CASE (Kaufen & Öffnen) ===================== */
-
-    // Konstanten & Tabelle
-    const CSGO_CASE_ID   = "case_csg_001";
-    const CSGO_CASE_NAME = "CS:GO Kiste";
-    const CSGO_CASE_PRICE = 50; // Einsatz aus Bargeld -> fließt in die Bank
-
-    // Drop-Tabelle (Gewinn = Auszahlung an User aus der Bank)
-    const CSGO_CASE_REWARDS = [
-      { label: "Common",    payout: 10,  weight: 520 },  // 52.0%
-      { label: "Uncommon",  payout: 25,  weight: 290 },  // 29.0%
-      { label: "Rare",      payout: 60,  weight: 140 },  // 14.0%
-      { label: "Epic",      payout: 150, weight: 45  },  // 4.5%
-      { label: "Legendary", payout: 400, weight: 5   },  // 0.5%
-    ];
-
-    // Hilfen
-    function weightedPick(items){
-      const total = items.reduce((s,i)=>s+i.weight, 0);
-      const r = Math.random()*total;
-      let acc = 0;
-      for (const it of items){ acc += it.weight; if (r <= acc) return it; }
-      return items[items.length-1];
-    }
-
-    // UI initialisieren
-    (function initCaseUI(){
-      const priceEl = document.querySelector("#casePrice");
-      const tableEl = document.querySelector("#caseTable");
-      if (priceEl) priceEl.textContent = String(CSGO_CASE_PRICE);
-      if (tableEl){
-        tableEl.innerHTML = "";
-        const denom = CSGO_CASE_REWARDS.reduce((s,i)=>s+i.weight,0);
-        CSGO_CASE_REWARDS.forEach(r=>{
-          const li = document.createElement("li");
-          const pct = (r.weight / denom * 100).toFixed(2);
-          li.textContent = `${r.label}: ${EUR(r.payout)} (${pct}%)`;
-          tableEl.appendChild(li);
-        });
-      }
-      const idEl = document.querySelector("#caseId");
-      if (idEl) idEl.textContent = CSGO_CASE_ID;
-    })();
-
-    // Bestand spiegeln
-    function updateCaseOwned(u){
-      const ownedEl = document.querySelector("#caseOwned");
-      if (!ownedEl) return;
-      ownedEl.textContent = String(u?.["inv_"+CSGO_CASE_ID] || 0);
-    }
-
-    // Kiste kaufen: Bargeld -> Bank (spendCash), dann inv_case_xxx++
-    async function buyCase(){
-      if (!state.userDoc){ openSheet(); return; }
-      try{
-        await spendCash(CSGO_CASE_PRICE);
-        await runTransaction(db, async (tx)=>{
-          const u = await tx.get(state.userDoc);
-          const ud = u.data() || {};
-          const key = "inv_"+CSGO_CASE_ID;
-          tx.update(state.userDoc, { [key]: (ud[key]||0) + 1 });
-        });
-        const u2 = (await getDoc(state.userDoc)).data();
-        updateCaseOwned(u2);
-        await logFeed(`Kiste gekauft (${CSGO_CASE_ID}) für ${EUR(CSGO_CASE_PRICE)}.`);
-        showToast(`Gekauft: 1× ${CSGO_CASE_NAME}`);
-      }catch(e){
-        showToast(e?.message || "Fehler beim Kauf");
-      }
-    }
-
-    // Kiste öffnen: inv--, Drop ziehen, Gewinn an User aus Bank (payoutCash)
-    async function openCase(){
-      if (!state.userDoc){ openSheet(); return; }
-      const resEl = document.querySelector("#caseResult");
-      try{
-        await runTransaction(db, async (tx)=>{
-          const u = await tx.get(state.userDoc);
-          const ud = u.data() || {};
-          const key = "inv_"+CSGO_CASE_ID;
-          const owned = ud[key]||0;
-          if (owned <= 0) throw new Error("Keine Kiste vorhanden.");
-          const patch = {}; patch[key] = owned - 1;
-          tx.update(state.userDoc, patch);
-        });
-
-        const drop = weightedPick(CSGO_CASE_REWARDS);
-        const payout = drop.payout;
-
-        if (payout > 0){
-          await payoutCash(payout);
-          await logFeed(`CS:GO Kiste Gewinn: ${drop.label} (${EUR(payout)})`);
-          if (resEl) resEl.innerHTML = `<b>Gewinn:</b> ${drop.label} • ${EUR(payout)}`;
-          showToast(`Gewinn: ${drop.label} • ${EUR(payout)}`);
-        }else{
-          await logFeed(`CS:GO Kiste: kein Gewinn`);
-          if (resEl) resEl.textContent = `Kein Gewinn`;
-          showToast(`Kein Gewinn`);
-        }
-
-        const u2 = (await getDoc(state.userDoc)).data();
-        updateCaseOwned(u2);
-      }catch(e){
-        showToast(e?.message || "Fehler beim Öffnen");
-      }
-    }
-
-    // Buttons binden
-    const btnBuyCase  = document.querySelector("#btnBuyCase");
-    const btnOpenCase = document.querySelector("#btnOpenCase");
-    if (btnBuyCase)  btnBuyCase.onclick  = buyCase;
-    if (btnOpenCase) btnOpenCase.onclick = openCase;
-
   </script>
 </body>
 </html>
