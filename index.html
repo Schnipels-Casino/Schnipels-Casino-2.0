@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
-  <title>Friends Bank – Mobile v3.4 (Slots Anti-Spam + CS:GO Case)</title>
+  <title>Friends Bank – Mobile v3.9.7 (Login fast + Slots + Job 20×5)</title>
   <meta name="theme-color" content="#ffffff">
   <style>
     :root{
@@ -18,7 +18,7 @@
       -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
     .hidden{display:none!important}
     .row{display:flex;gap:.8rem;align-items:center}
-    .col{display:flex;flex-direction:column;gap:.8rem}
+    .col{display:flex;flex-direction:column;gap:.2rem}
     .between{justify-content:space-between}
     .center{justify-content:center;align-items:center}
     .container{max-width:880px;margin:0 auto}
@@ -28,14 +28,23 @@
     .btn.primary{background:var(--accent);color:#052010;border-color:#129454}
     .btn.warn{background:var(--warn);color:#231a00;border-color:#b07404}
     .btn.danger{background:#f43f5e;color:#2b0d0d;border-color:#d11a44}
+    .btn.small{min-height:40px;padding:.5rem .8rem;border-radius:12px;font-weight:900}
     input,select{width:100%;background:#f2f5fb;color:var(--text);border:1px solid var(--outline);border-radius:12px;padding:1rem 1rem;font-size:18px}
     label{font-size:1rem;color:#24324a;font-weight:800}
     small{color:var(--muted);font-size:.98rem}
     ::placeholder{color:#6b7280;opacity:.9}
+
+    /* TOPBAR */
     .topbar{position:sticky;top:0;z-index:50;background:#ffffffee;border-bottom:1px solid var(--outline);padding:.6rem .9rem;backdrop-filter:saturate(1.3) blur(6px);box-shadow:0 6px 18px rgba(15,22,36,.06)}
-    .top-grid{display:grid;grid-template-columns:110px 1fr 160px;gap:.6rem;align-items:center}
-    .circle{width:48px;height:48px;border-radius:999px;background:var(--pill);border:1px solid var(--outline);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;cursor:pointer}
-    #screen{padding:14px;display:flex;flex-direction:column;gap:14px;padding-bottom:110px}
+    .top-grid{display:grid;grid-template-columns:1fr auto;gap:.6rem;align-items:center}
+    .left-wrap{display:flex;align-items:center;gap:.7rem;min-height:52px}
+    .bank-name{font-weight:1000;font-size:1.05rem;line-height:1.1}
+    .acct-line{font-weight:800;color:#0f172a}
+    .circle{width:44px;height:44px;border-radius:999px;background:var(--pill);border:1px solid var(--outline);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;cursor:pointer}
+    .icon-row{display:flex;gap:.5rem;align-items:center;justify-content:flex-end}
+    .cash-amount{font-weight:900}
+    #screen{padding:14px;display:flex;flex-direction:column;gap:14px;padding-bottom:120px}
+
     .tabs{display:flex;gap:.6rem}
     .tab{flex:1;padding:.9rem;border:1px solid var(--outline);background:var(--pill);border-radius:12px;text-align:center;font-weight:900;cursor:pointer}
     .tab.active{background:var(--accent2);color:#fff;border-color:#1e4fd5}
@@ -43,66 +52,63 @@
     .strip{display:flex;gap:.6rem;overflow:auto;padding-bottom:.2rem}
     .grid2{display:grid;grid-template-columns:1fr;gap:.8rem}
     .grid3{display:grid;grid-template-columns:1fr;gap:.8rem}
-    .gridAuto{display:grid;grid-template-columns:1fr;gap:.8rem}
-    @media (min-width:720px){.grid2{grid-template-columns:1fr 1fr}.grid3{grid-template-columns:repeat(3,1fr)}.gridAuto{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}}
-    .toast{position:fixed;bottom:14px;left:0;right:0;margin:auto;max-width:560px;padding:1rem 1.1rem;border-radius:12px;background:#0f1624;color:#fff;border:1px solid #1f2a40;box-shadow:0 10px 30px rgba(15,22,36,.25);text-align:center}
-    .slot-grid{display:grid;grid-template-columns:repeat(3,74px);grid-auto-rows:74px;gap:10px;justify-content:center;align-content:center}
-    .slot-cell{display:flex;align-items:center;justify-content:center;border:2px solid var(--outline);border-radius:12px;background:#f2f6ff;font-size:30px;transition:transform .12s;box-shadow:var(--shadow)}
-    .slot-cell.spin{transform:scale(1.05)}
+    .gridAuto{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.8rem}
+    @media (min-width:720px){.grid2{grid-template-columns:1fr 1fr}.grid3{grid-template-columns:repeat(3,1fr)}}
+    .toast{position:fixed;bottom:14px;left:0;right:0;margin:auto;max-width:560px;padding:1rem 1.1rem;border-radius:12px;background:#0f1624;color:#fff;border:1px solid #1f2a40;box-shadow:0 10px 30px rgba(15,22,36,.25);text-align:center;z-index:1200}
+
     footer.nav{position:fixed;left:0;right:0;bottom:0;padding:.6rem;background:#ffffffee;border-top:1px solid var(--outline);display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;backdrop-filter:saturate(1.2) blur(6px);z-index:60}
 
-    /* >>> FIX: modal/sheet so the login sits at the TOP as before <<< */
-    .modal{
-      position:fixed;
-      inset:0;
-      display:none;             /* shown via JS -> display:flex */
-      align-items:flex-start;   /* anchor to top */
-      justify-content:center;
-      background:rgba(15,22,36,.12);
-      backdrop-filter:blur(2px) saturate(1.1);
-      z-index:1000;             /* above topbar/footer */
-    }
-    .sheet{
-      width:100%;
-      max-width:880px;
-      background:var(--card);
-      border:1px solid var(--outline);
-      border-radius:18px;
-      box-shadow:var(--shadow);
-      margin:72px 12px 18px;    /* appear just under the topbar */
-      overflow:hidden;
-    }
+    /* Modal */
+    .modal{pointer-events:auto;position:fixed;inset:0;display:none;align-items:flex-start;justify-content:center;background:rgba(15,22,36,.12);backdrop-filter:blur(2px) saturate(1.1);z-index:1000}
+    .sheet{width:100%;max-width:880px;background:var(--card);border:1px solid var(--outline);border-radius:18px;box-shadow:var(--shadow);margin:72px 12px 18px;overflow:hidden}
     .handle{width:46px;height:5px;background:#e5e7eb;border-radius:999px;margin:10px auto}
 
-    /* (optional) simple bubbles for chat so it still looks tidy */
     .chat-bubble{padding:.6rem .8rem;border:1px solid var(--outline);border-radius:12px;background:var(--pill);margin-bottom:.6rem}
     .chat-bubble.mine{background:#e8f7ff;border-color:#3b82f6}
-    /* END FIX */
-    .bank-choice .btn{border-width:2px}
-    .bank-choice .btn.active{background:#e8f7ff;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.18) inset}
-  </style>
+
+    /* JOB (20x5 = 100 Felder) */
+    .job-grid{display:grid;grid-template-columns:repeat(20,34px);justify-content:center;gap:6px}
+    .job-cell{width:34px;height:34px;border:2px solid var(--outline);border-radius:10px;background:#f3f4f6;box-shadow:var(--shadow);cursor:pointer;transition:transform .08s}
+    .job-cell:active{transform:scale(0.98)}
+    .job-cell.target{background:#d1fae5;border-color:#10b981}
+    @keyframes burst{0%{opacity:1;transform:scale(1)}60%{opacity:.2;transform:scale(.7)}100%{opacity:0;transform:scale(.6)}}
+    .job-cell.burst{animation:burst .18s ease-out}
+
+    /* SLOTS */
+    .slot-grid{display:grid;grid-template-columns:repeat(3,64px);grid-auto-rows:64px;gap:10px;justify-content:center;align-content:center}
+    .slot-cell{display:flex;align-items:center;justify-content:center;border:2px solid var(--outline);border-radius:12px;background:#f2f6ff;font-size:28px;transition:transform .12s;box-shadow:var(--shadow)}
+    .slot-cell.spin{transform:scale(1.05)}
+
+    /* SHOP layout refinements */
+    #toolList.gridAuto{grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+    #toolList .card{padding:14px}
+    #toolList .tool-right{align-items:flex-end;width:140px}
+    #toolList .tool-right .btn{width:100%;min-height:40px;padding:.5rem .8rem;border-radius:12px;font-size:14px}
+  .modal.hidden{display:none!important;pointer-events:none!important}
+</style>
 </head>
 <body>
   <div class="topbar">
     <div class="container">
       <div class="top-grid">
-        <div class="row" style="gap:.6rem">
+        <div class="left-wrap">
           <div id="btnBank" class="circle" title="Bank wählen">💶</div>
+          <button id="btnLogout" class="btn danger small hidden">Logout</button>
           <div class="col">
-            <div style="font-weight:1000;font-size:1.05rem" id="bankLabel">Keine Bank gewählt</div>
-            <small class="money" id="acctBalance">—</small>
+            <div class="bank-name" id="bankLabel">—</div>
+            <div class="acct-line money" id="acctBalance">—</div>
           </div>
         </div>
-        <div class="center">
-          <button id="btnChat" class="btn" style="padding:.65rem 1rem;">💬 Chat</button>
-        </div>
-        <div class="row" style="gap:.5rem;justify-content:flex-end">
-          <div class="col" style="align-items:flex-end">
-            <div class="small" style="opacity:.9">Bargeld</div>
-            <div id="cashLabel" class="money" style="font-size:1.05rem">€0</div>
-          </div>
+        <div class="icon-row">
+          <div id="btnJob" class="circle" title="Job">👷</div>
           <div id="btnSlots" class="circle" title="Slots">🎰</div>
           <div id="btnHouse" class="circle" title="Häuser">🏠</div>
+          <div id="btnChat" class="circle" title="Chat">💬</div>
+          <div id="btnShop" class="circle" title="Shop">💵</div>
+          <div class="row" style="gap:.5rem">
+            <div class="small" style="opacity:.9">💵</div>
+            <div id="cashLabel" class="money cash-amount">€0</div>
+          </div>
         </div>
       </div>
     </div>
@@ -111,7 +117,7 @@
   <main id="screen" class="container">
     <div id="welcome" class="card">
       <div class="section-title">Willkommen 👋</div>
-      <p>Tippe links oben auf <b>💶</b>, wähle deine Bank & logge dich mit <b>Name + Passwort</b> ein.</p>
+      <p>Tippe oben auf <b>💶</b>, wähle deine Bank & logge dich mit <b>Name + Passwort</b> ein.</p>
       <div class="grid2">
         <div class="card">
           <div class="section-title">Tägliches Bonusgeld</div>
@@ -128,6 +134,7 @@
       </div>
     </div>
 
+    <!-- BANK -->
     <div id="bankArea" class="card">
       <div class="section-title">Dein Konto</div>
       <div class="grid2">
@@ -141,7 +148,6 @@
           <div class="row between"><div>Deine Anteile</div><div id="userShares">0</div></div>
         </div>
       </div>
-
       <div class="grid2">
         <div class="card">
           <div class="section-title">Ein-/Auszahlen</div>
@@ -157,7 +163,7 @@
             <button id="btnDeposit" class="btn primary">Einzahlen ➜</button>
             <button id="btnWithdraw" class="btn">⬅ Auszahlen</button>
           </div>
-          <small>Bargeld wird oben rechts angezeigt.</small>
+          <small>Bargeld (💵) wird oben rechts angezeigt.</small>
         </div>
         <div class="card">
           <div class="section-title">Leihen & Kredit</div>
@@ -171,7 +177,6 @@
           </div>
         </div>
       </div>
-
       <div class="grid2">
         <div class="card">
           <div class="section-title">Aktien handeln</div>
@@ -188,13 +193,13 @@
           <small>Start: €1.000.000.000. Einsätze erhöhen, Auszahlungen senken es.</small>
         </div>
       </div>
-
       <div class="card">
         <div class="section-title">Verlauf</div>
         <div id="feed" class="mono" style="max-height:38vh;overflow:auto;white-space:pre-line"></div>
       </div>
     </div>
 
+    <!-- SLOTS -->
     <div id="slotsArea" class="card hidden">
       <div class="section-title">Slots 🎰</div>
       <small>Einsätze: 5 / 10 / 30 / 50 / 80 / 100 € (vom Bargeld)</small>
@@ -248,13 +253,39 @@
         <div class="row" style="gap:.6rem">
           <select id="stakeCASE"><option>5</option><option>10</option><option>30</option><option>50</option><option>80</option><option>100</option></select>
           <button id="btnBuyCase" class="btn">Kiste kaufen</button>
-          <button id="btnOpenCase" class="btn primary">Kiste öffnen</button>
+          <button id="btnOpenCase" class="btn primary" disabled>Kiste öffnen</button>
         </div>
         <small>Der Einsatz geht in die Bankfonds. Gewinne werden aus den Bankfonds bezahlt.</small>
         <div id="casePrize" class="section-title" style="margin-top:.4rem"></div>
       </div>
     </div>
 
+    <!-- JOB -->
+    <div id="jobArea" class="card hidden">
+      <div class="section-title">Job 👷</div>
+      <small>Triff das grün markierte Feld. Du hast <b>1:00</b> Minuten. Maximal 100 Treffer. <b>20€</b> Basislohn pro Treffer (+ Tool-Bonus). Einmal täglich.</small>
+      <div class="row between" style="margin:.4rem 0">
+        <div><b>Treffer:</b> <span id="jobHits">0</span> / 100</div>
+        <div><b>Verdienst:</b> <span id="jobEarn">€0,00</span></div>
+        <div><b>Zeit:</b> <span id="jobTime">01:00</span></div>
+      </div>
+      <div id="jobGrid" class="job-grid" style="margin:.4rem 0"></div>
+      <div class="row" style="gap:.6rem">
+        <button id="btnStartJob" class="btn primary">Job starten</button>
+        <button id="btnEndJob" class="btn danger" disabled>Beenden</button>
+      </div>
+      <small id="jobHint"></small>
+    </div>
+
+    <!-- SHOP -->
+    <div id="shopArea" class="card hidden">
+      <div class="section-title">Shop ⛏️</div>
+      <small>Kaufe Spitzhacken mit <b>Bargeld (💵)</b>. Der Betrag geht in die Bankfonds. Aktuelles Werkzeug wirkt auf den <b>Lohn pro Treffer</b>.</small>
+      <div class="row" style="margin-top:.4rem;justify-content:flex-end"><div><b>Lohn/Schlag:</b> <span id="shopRate">€20</span></div></div>
+      <div id="toolList" class="gridAuto" style="margin-top:.6rem"></div>
+    </div>
+
+    <!-- HÄUSER -->
     <div id="houseArea" class="card hidden">
       <div class="section-title">Häuser & Mieten 🏠</div>
       <div class="gridAuto" id="houseList"></div>
@@ -264,6 +295,7 @@
       </div>
     </div>
 
+    <!-- CHAT -->
     <div id="chatArea" class="card hidden">
       <div class="row tabs">
         <div id="tabGlobal" class="tab active">Global</div>
@@ -274,7 +306,11 @@
         <div class="row"><input id="globalMsg" placeholder="Nachricht an alle…"><button id="sendGlobal" class="btn primary">Senden</button></div>
       </div>
       <div id="chatPrivate" class="col hidden">
-        <div class="row"><input id="pmTo" placeholder="Empfänger (Name)"></div>
+        <div class="row" style="gap:.6rem">
+          <input id="pmTo" placeholder="Empfänger (Name)">
+          <button id="btnFindUser" class="btn small" title="Spieler suchen">🔎</button>
+        </div>
+        <small id="pmFindHint"></small>
         <div id="privateList" style="max-height:38vh;overflow:auto"></div>
         <div class="row"><input id="privateMsg" placeholder="Deine private Nachricht…"><button id="sendPrivate" class="btn primary">Senden</button></div>
       </div>
@@ -291,8 +327,7 @@
   </footer>
 
   <!-- Bank Sheet -->
-  <!-- FIX: Use modal overlay aligned to TOP (align-items:flex-start) -->
-  <div id="sheetBank" class="modal" style="display:none;align-items:flex-start">
+  <div id="sheetBank" class="modal hidden" style="display:none;align-items:flex-start">
     <div class="sheet">
       <div class="handle"></div>
       <div class="container" style="padding:10px 12px 18px">
@@ -312,23 +347,25 @@
           <label>Passwort</label><input id="loginPass" type="password" placeholder="••••••••">
           <div class="row between" style="gap:.6rem">
             <button id="btnLogin" class="btn primary" style="flex:1">Einloggen / Konto anlegen</button>
-            <button id="btnLogout" class="btn danger" style="flex:1">Abmelden</button>
           </div>
           <small id="loginHint">Startguthaben: €1.500. Täglicher Bonus: €500.</small>
         </div>
-        <div class="center" style="padding:10px"><button id="closeBank" class="btn">Schließen</button></div>
       </div>
-    </div>
+    
+        <div class="center" style="padding:10px"><button id="closeBank" class="btn">Schließen</button></div>
+</div>
   </div>
 
   <div id="toast" class="toast hidden"></div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
-    import { getAuth, signInAnonymously, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, addDoc, serverTimestamp, query, where, orderBy, limit, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+async function start(){
 
-    // ---- Firebase (deine Daten) ----
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js");
+    const { getAuth, signInAnonymously, onAuthStateChanged, setPersistence, browserLocalPersistence } = await import("https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js");
+    const { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, addDoc, serverTimestamp, query, where, orderBy, limit, runTransaction } = await import("https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js");
+
+    // ---- Firebase ----
     const firebaseConfig = { apiKey: "AIzaSyDN1MZv_q38Zoymt92BHWTe9sUNwteT1KA", authDomain: "sample-firebase-ai-app-b02a4.firebaseapp.com", projectId: "sample-firebase-ai-app-b02a4", storageBucket: "sample-firebase-ai-app-b02a4.firebasestorage.app", messagingSenderId: "382050648468", appId: "1:382050648468:web:8c6f34051a7b2991ebcf81" };
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
@@ -342,51 +379,68 @@
     const hash = async (s)=>{ const enc = new TextEncoder().encode(s); const buf = await crypto.subtle.digest("SHA-256", enc); return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join(""); };
     const showToast = (m)=>{ const t=$("#toast"); t.textContent=m; t.classList.remove("hidden"); setTimeout(()=>t.classList.add("hidden"), 2200); };
     const logFeed = async (txt)=>{ $("#feed").prepend("• "+txt+"\\n"); if (state.userDoc) await addDoc(collection(db, "users", state.userDoc.id, "feed"), { txt, at: serverTimestamp() }); };
-    const state = { bank:null, user:null, userDoc:null, bankDoc:null, listeners:[], tcRunning:false, authed:false };
+    const state = { bank:null, user:null, userDoc:null, bankDoc:null, listeners:[], authed:false };
 
-    // ---- Slots Rate-Limit & UI-Helpers ----
-    const SLOT_MIN_INTERVAL = 2000; // 2s zwischen Slot-Aktionen (HL/CF/Triple/CASE). Für 1s => 1000
-    let lastSlotAction = 0;
-    function slotGuard() {
-      const now = Date.now();
-      const diff = now - lastSlotAction;
-      if (diff < SLOT_MIN_INTERVAL) {
-        const wait = Math.ceil((SLOT_MIN_INTERVAL - diff) / 1000);
-        showToast(`Bitte noch ${wait}s warten…`);
-        return false;
-      }
-      lastSlotAction = now;
-      return true;
-    }
-    function setSlotsDisabled(disabled) {
-      ["#btnHigher","#btnLower","#btnCF","#btnSpin","#btnAuto10","#btnBuyCase","#btnOpenCase"]
-        .forEach(sel => { const el = document.querySelector(sel); if (el) el.disabled = disabled; });
-    }
-    function quickStatus(el, text) { if (el) { el.textContent = text; setTimeout(()=>{ if (el.textContent===text) el.textContent=""; }, 1200); } }
-
-    // ---------- AUTH (anonymous) ----------
+    // ---------- AUTH (fast with fallback) ----------
     const auth = getAuth(app);
     let authUser = null;
     async function ensureAuth(){
-      if (state.authed) return authUser;
-      try{
-        await setPersistence(auth, browserLocalPersistence);
-        if (!auth.currentUser) await signInAnonymously(auth);
-        await new Promise((resolve)=> onAuthStateChanged(auth, (u)=>{ authUser=u; state.authed=!!u; resolve(); }));
-        return authUser;
-      }catch(e){ console.error(e); showToast("Auth-Fehler: "+(e?.message||"")); }
+      if (state.authed && auth.currentUser) return authUser;
+      if (ensureAuth._p) return ensureAuth._p;
+      ensureAuth._p = new Promise(async (resolve)=>{
+        let unsub=null, resolved=false;
+        function finish(u){
+          if (resolved) return;
+          resolved=true;
+          authUser = u;
+          state.authed = !!u;
+          if (unsub) try{unsub();}catch{}
+          resolve(u);
+        }
+        try{
+          await setPersistence(auth, browserLocalPersistence);
+          unsub = onAuthStateChanged(auth, (u)=> finish(u));
+          if (!auth.currentUser){
+            try{ await signInAnonymously(auth); }catch(e){ console.warn("signInAnonymously", e?.message||e); }
+          }
+          setTimeout(()=> finish(auth.currentUser||null), 3000);
+        }catch(e){
+          console.error(e);
+          showToast("Auth-Fehler: "+(e?.message||""));
+          finish(null);
+        }finally{
+          ensureAuth._p = null;
+        }
+      });
+      return ensureAuth._p;
     }
     ensureAuth();
 
     // ---------- UI refs ----------
     const bankSheet = $("#sheetBank"), bankLabel=$("#bankLabel"), bankBalance=$("#bankBalance"), cashLabel=$("#cashLabel"), acctBalance=$("#acctBalance"), stockPriceEl=$("#stockPrice"), stockBankName=$("#stockBankName"), bankFundsEl=$("#bankFunds"), userSharesEl=$("#userShares");
-    const openSheet = ()=> bankSheet.style.display = "flex";
-    const closeSheet = ()=> bankSheet.style.display = "none";
-    $("#btnBank").onclick = openSheet; $("#closeBank").onclick = closeSheet;
-    // Optional: close when clicking outside the sheet
-    bankSheet.addEventListener("click",(e)=>{ if(e.target===bankSheet) closeSheet(); });
+    const openSheet = ()=> { bankSheet.style.display = "flex"; bankSheet.classList.remove("hidden"); };
+    $("#btnBank").onclick = openSheet;
+    // --- Auth buttons toggle ---
+    const btnLogoutEl = document.getElementById("btnLogout");
+    const btnBankEl = document.getElementById("btnBank");
+    function updateAuthButtons(){
+      if (state.userDoc){
+        if (btnBankEl) btnBankEl.classList.add("hidden");
+        if (btnLogoutEl) btnLogoutEl.classList.remove("hidden");
+      }else{
+        if (btnLogoutEl) btnLogoutEl.classList.add("hidden");
+        if (btnBankEl) btnBankEl.classList.remove("hidden");
+      }
+    }
+    if (btnBankEl){ btnBankEl.onclick = openSheet; }
+    updateAuthButtons();
 
-    setTimeout(()=>showToast("Tipp: Tippe links oben auf 💶, um deine Bank zu wählen."), 600);
+    const closeSheet = ()=> { bankSheet.style.display = "none"; bankSheet.classList.add("hidden"); };
+    $("#closeBank").onclick = closeSheet;
+    setTimeout(()=>showToast("Tipp: Wähle deine Bank & logge dich ein."), 600);
+
+    // Logout
+    $("#btnLogout").onclick = ()=>{ state.listeners.forEach(u=>u()); state.listeners=[]; state.user=null; state.userDoc=null; updateAuthButtons(); openSheet(); };
 
     // Bank choice
     $$("#sheetBank [data-bank]").forEach(btn=>{
@@ -411,68 +465,56 @@
       if (name.length<2 || pass.length<3){ showToast("Name/Passwort zu kurz."); return; }
 
       const btn = $("#btnLogin"); btn.disabled = true; const oldTxt = btn.textContent; btn.textContent = "Bitte warten…";
+      const _guard = setTimeout(()=>{ try{ btn.disabled=false; btn.textContent=oldTxt; }catch{} showToast("Login dauert zu lange – bitte Verbindung prüfen und erneut versuchen."); }, 8000);
       try{
         await ensureAuth();
         const uname = name.toLowerCase();
         const passHash = await hash(pass);
 
-        const idxRef = doc(db, "users_index", uname);
-        const idxSnap = await getDoc(idxRef);
-        if (idxSnap.exists() && idxSnap.data().bank !== state.bank){
-          showToast(`Name bereits in ${idxSnap.data().bank} registriert. Verwende einen anderen Namen oder melde dich dort an.`);
-          return;
-        }
-
+        /* users_index übersprungen (maximale Kompatibilität) */
         const userId = `${state.bank.replaceAll(" ","")}_${uname}`;
         const userRef = doc(db, "users", userId);
         const snap = await getDoc(userRef);
 
         if (!snap.exists()){
-          const init = { bank: state.bank, name, passHash, createdAt: serverTimestamp(), bankBalance: 1500, cash: 0, lastDaily: "", lastBorrow: "", loanOutstanding: 0, creditOutstanding: 0, lastRent: "", shares: 0 };
+          const init = { bank: state.bank, name, passHash, createdAt: serverTimestamp(), owner: authUser?.uid || null, bankBalance: 1500, cash: 0, lastDaily: "", lastBorrow: "", loanOutstanding: 0, creditOutstanding: 0, lastRent: "", shares: 0, jobTool: 0, lastJob: "" };
           await setDoc(userRef, init);
-          await setDoc(idxRef, { bank: state.bank, uid: userId });
+          /* users_index write entfernt */
           showToast("Konto erstellt. Willkommen!");
         }else{
           const data = snap.data();
           if (data.passHash !== passHash){ showToast("Falsches Passwort."); return; }
+          try{ if (!data.owner) await updateDoc(userRef, { owner: authUser?.uid || null }); }catch(e){}
         }
         await attachUser(userRef);
         closeSheet();
         await logFeed("Angemeldet bei "+state.bank+".");
       }catch(err){ console.error(err); showToast("Login-Fehler: "+(err?.message||"Unbekannt")); }
-      finally{ btn.disabled = false; btn.textContent = oldTxt; }
+      finally{ try{ clearTimeout(_guard); }catch{} btn.disabled = false; btn.textContent = oldTxt; }
     };
 
-    $("#btnLogout").onclick = ()=>{
-      state.listeners.forEach(u=>u()); state.listeners=[];
-      state.user = null; state.userDoc = null;
-      $("#bankBalance").textContent = "€0";
-      $("#loanOutstanding").textContent = "€0";
-      $("#creditOutstanding").textContent = "€0";
-      $("#userShares").textContent = "0";
-      $("#rentInfo").textContent = "";
-      $("#feed").textContent = "";
-      showToast("Abgemeldet. Du kannst nun eine (andere) Bank und einen neuen Namen wählen.");
-      openSheet();
-    };
-
-    async function attachUser(userRef){
+    async function attachUser(userRef){ updateAuthButtons();
       state.listeners.forEach(u=>u()); state.listeners=[];
       state.userDoc = userRef;
       const unsub = onSnapshot(userRef, (d)=>{
         const u = d.data(); if (!u) return;
         state.user = { id:d.id, ...u };
         bankBalance.textContent = EUR(u.bankBalance||0);
-        acctBalance.textContent = state.bank ? (state.bank+" • "+EUR(u.bankBalance||0)) : "—";
+        acctBalance.textContent = EUR(u.bankBalance||0);
         cashLabel.textContent = EUR(u.cash||0);
         $("#loanOutstanding").textContent = EUR(u.loanOutstanding||0);
         $("#creditOutstanding").textContent = EUR(u.creditOutstanding||0);
         userSharesEl.textContent = (u.shares||0);
         $("#rentInfo").textContent = u.lastRent ? ("Letzte Miete: "+u.lastRent) : "Noch keine Miete kassiert";
-        renderHouses(u);
+        renderHouses(u); renderShop(u);
+        const t=todayDE();
+        if (btnStartJob) btnStartJob.disabled = (u.lastJob||"")===t;
+        jobHint.textContent = btnStartJob.disabled ? "Heute erledigt – ab 00:00 wieder verfügbar." : "";
+        state.user.jobToolBonus = toolById(u.jobTool||0).bonus||0;
       });
       state.listeners.push(unsub);
-      await ensureBankDoc(); await ensureTicker(); await loadFeed(); await attachChat();
+      }catch(e){ console.warn("bank snapshot attach failed:", e?.message||e); }
+      await ensureBankDoc(); await ensureTicker(); await loadFeed(); attachChat();
     }
 
     async function ensureBankDoc(){
@@ -480,19 +522,18 @@
       await ensureAuth();
       const id = state.bank.replaceAll(" ","");
       const bRef = doc(db, "banks", id);
-      const snap = await getDoc(bRef);
-      if (!snap.exists()){
-        await setDoc(bRef, { name: state.bank, funds: 1_000_000_000, stockPrice: 100, lastStockUpdate: Date.now() });
+      let snap=null; try{ snap = await getDoc(bRef); }catch(e){ console.warn("bank read denied:", e?.message||e); }
+      if (snap && !snap.exists()){
+        try{ await setDoc(bRef, { name: state.bank, funds: 1_000_000_000, stockPrice: 100, lastStockUpdate: Date.now() }); }catch(e){ console.warn("bank create denied:", e?.message||e); }
       }
       state.bankDoc = bRef;
-      const unsub = onSnapshot(bRef, (d)=>{
+      try{ const unsub = onSnapshot(bRef, (d)=>{
         const b = d.data(); if (!b) return;
         bankFundsEl.textContent = EUR(b.funds||0);
         stockPriceEl.textContent = EUR(b.stockPrice||0);
       });
       state.listeners.push(unsub);
     }
-
     async function ensureTicker(){
       if (!state.bankDoc) return;
       await ensureAuth();
@@ -507,23 +548,17 @@
           const next = Math.max(5, Math.round(b.stockPrice * (1+pct)*100)/100);
           tx.update(state.bankDoc, { stockPrice: next, lastStockUpdate: now });
         });
-      }catch(e){ /* ignore */ }
+      }catch(e){}
     }
     setInterval(ensureTicker, 12_500);
 
     async function loadFeed(){
       if (!state.userDoc) return;
       const q = query(collection(db, "users", state.userDoc.id, "feed"), orderBy("at","desc"), limit(50));
-      onSnapshot(q, (qs)=>{
-        const el = $("#feed"); el.textContent = "";
-        qs.forEach(doc=> el.append("• "+doc.data().txt+"\\n") );
-      });
+      onSnapshot(q, (qs)=>{ const el = $("#feed"); el.textContent = ""; qs.forEach(doc=> el.append("• "+doc.data().txt+"\\n") ); });
     }
 
-    $$("#ioAmount ~ .strip .btn").forEach(b=> b.onclick = ()=>{
-      const v = Number($("#ioAmount").value||0) + Number(b.dataset.quick||0);
-      $("#ioAmount").value = v;
-    });
+    $$("#ioAmount ~ .strip .btn").forEach(b=> b.onclick = ()=>{ const v = Number($("#ioAmount").value||0) + Number(b.dataset.quick||0); $("#ioAmount").value = v; });
 
     async function txUpdate(cb){ await ensureAuth(); return await runTransaction(db, cb); }
 
@@ -636,32 +671,38 @@
     // Aktien
     $("#btnBuyShares").onclick = async ()=>{
       if (!state.userDoc) return openSheet();
-      const qty = Math.trunc(Number($("#sharesQty").value||0)); if (qty<=0) return;
+      const qty = Math.trunc(Number($("#sharesQty").value||0));
+      if (!Number.isFinite(qty) || qty<=0){ showToast("Bitte gültige Stückzahl eingeben."); return; }
       try{
         await txUpdate(async (tx)=>{
-          const u = await tx.get(state.userDoc); const b = await tx.get(state.bankDoc);
-          const ud = u.data(); const bd = b.data();
-          const price = b.data().stockPrice||100;
+          const u = await tx.get(state.userDoc);
+          const b = await tx.get(state.bankDoc);
+          const ud = u.data();
+          const bd = b.data();
+          const price = (bd.stockPrice||100);
           const cost = Math.round(price*qty*100)/100;
           if ((ud.bankBalance||0) < cost) throw new Error("Zu wenig Guthaben.");
           tx.update(state.userDoc, { bankBalance:(ud.bankBalance||0)-cost, shares:(ud.shares||0)+qty });
-          tx.update(state.bankDoc, { funds:(bd.funds||0)+cost });
+          tx.update(state.bankDoc,  { funds:(bd.funds||0)+cost });
         });
         await logFeed("Aktienkauf: +"+qty+" Stk."); showToast("Gekauft: "+qty+" Stk.");
       }catch(e){ showToast(e.message||"Fehler"); }
     };
     $("#btnSellShares").onclick = async ()=>{
       if (!state.userDoc) return openSheet();
-      const qty = Math.trunc(Number($("#sharesQty").value||0)); if (qty<=0) return;
+      const qty = Math.trunc(Number($("#sharesQty").value||0));
+      if (!Number.isFinite(qty) || qty<=0){ showToast("Bitte gültige Stückzahl eingeben."); return; }
       try{
         await txUpdate(async (tx)=>{
-          const u = await tx.get(state.userDoc); const b = await tx.get(state.bankDoc);
-          const ud = u.data(); const bd = b.data();
-          const price = b.data().stockPrice||100;
+          const u = await tx.get(state.userDoc);
+          const b = await tx.get(state.bankDoc);
+          const ud = u.data();
+          const bd = b.data();
+          const price = (bd.stockPrice||100);
           if ((ud.shares||0) < qty) throw new Error("Nicht genug Anteile.");
           const proceeds = Math.round(price*qty*100)/100;
           tx.update(state.userDoc, { bankBalance:(ud.bankBalance||0)+proceeds, shares:(ud.shares||0)-qty });
-          tx.update(state.bankDoc, { funds:(bd.funds||0)-proceeds });
+          tx.update(state.bankDoc,  { funds:(bd.funds||0)-proceeds });
         });
         await logFeed("Aktienverkauf: -"+qty+" Stk."); showToast("Verkauft: "+qty+" Stk.");
       }catch(e){ showToast(e.message||"Fehler"); }
@@ -679,17 +720,81 @@
     async function buyHouse(hid){ if (!state.userDoc) return openSheet(); const h=HOUSES.find(x=>x.id===hid); if(!h) return; try{ await txUpdate(async(tx)=>{ const u=await tx.get(state.userDoc); const b=await tx.get(state.bankDoc); const ud=u.data(); const bd=b.data(); if((ud.bankBalance||0)<h.price) throw new Error("Zu wenig Guthaben."); const patch={}; patch["own_"+hid]=(ud["own_"+hid]||0)+1; tx.update(state.userDoc, Object.assign(patch,{bankBalance:(ud.bankBalance||0)-h.price})); tx.update(state.bankDoc,{funds:(bd.funds||0)+h.price}); }); await logFeed("Gekauft: "+h.name+" für "+EUR(h.price)); showToast("Gekauft: "+h.name);}catch(e){ showToast(e.message||"Fehler"); }}
     async function sellHouse(hid){ if (!state.userDoc) return openSheet(); const h=HOUSES.find(x=>x.id===hid); if(!h) return; try{ await txUpdate(async(tx)=>{ const u=await tx.get(state.userDoc); const b=await tx.get(state.bankDoc); const ud=u.data(); const bd=b.data(); if((ud["own_"+hid]||0)<=0) throw new Error("Kein Besitz."); const patch={}; patch["own_"+hid]=(ud["own_"+hid]||0)-1; const refund=Math.round(h.price*0.8); tx.update(state.userDoc, Object.assign(patch,{bankBalance:(ud.bankBalance||0)+refund})); tx.update(state.bankDoc,{funds:(bd.funds||0)-refund}); }); await logFeed("Verkauft: "+h.name+" für "+EUR(h.price*0.8)); showToast("Verkauft: "+h.name);}catch(e){ showToast(e.message||"Fehler"); }}
 
-    // ------- Slots -------
+    // ---- Chat ----
+    function attachChat(){
+      const qg = query(collection(db,"messages"), where("bank","==",state.bank), where("type","==","global"), orderBy("at","desc"), limit(50));
+      onSnapshot(qg, (qs)=>{
+        const box = $("#globalList"); box.innerHTML="";
+        qs.forEach(d=>{ const m=d.data(); const div=document.createElement("div"); div.className="chat-bubble "+(m.from===state.user?.name?"mine":""); div.innerHTML=`<b>${m.from}</b><br>${m.text||""}`; box.appendChild(div); });
+      });
+      if (state.user){
+        const qp = query(collection(db,"messages"), where("bank","==",state.bank), where("type","==","private"), orderBy("at","desc"), limit(50));
+        onSnapshot(qp, (qs)=>{
+          const box = $("#privateList"); box.innerHTML="";
+          qs.forEach(d=>{ const m=d.data(); if (m.from===state.user.name || m.to===state.user.name){ const div=document.createElement("div"); div.className="chat-bubble "+(m.from===state.user?.name?"mine":""); div.innerHTML=`<b>${m.from} ➜ ${m.to}</b><br>${m.text||""}`; box.appendChild(div); } });
+        });
+      }
+    }
+    $("#sendGlobal").onclick = async ()=>{ const text=$("#globalMsg").value.trim(); if (!text) return; try{ if (!state.userDoc) return openSheet(); await ensureAuth(); await addDoc(collection(db,"messages"), { bank: state.bank, type:"global", text, from: state.user?.name||"?", at: serverTimestamp() }); $("#globalMsg").value=""; }catch(e){ showToast(e.message||"Fehler"); } };
+    $("#sendPrivate").onclick = async ()=>{ const to=$("#pmTo").value.trim(); const text=$("#privateMsg").value.trim(); if (!to||!text) return; try{ if (!state.userDoc) return openSheet(); await ensureAuth(); await addDoc(collection(db,"messages"), { bank: state.bank, type:"private", to, text, from: state.user?.name||"?", at: serverTimestamp() }); $("#privateMsg").value=""; }catch(e){ showToast(e.message||"Fehler"); } };
+
+    $("#tabGlobal").onclick = ()=>{ $("#tabGlobal").classList.add("active"); $("#tabPrivate").classList.remove("active"); $("#chatGlobal").classList.remove("hidden"); $("#chatPrivate").classList.add("hidden"); };
+    $("#tabPrivate").onclick = ()=>{ $("#tabPrivate").classList.add("active"); $("#tabGlobal").classList.remove("active"); $("#chatPrivate").classList.remove("hidden"); $("#chatGlobal").classList.add("hidden"); };
+
+    // User search
+    async function findUserByName(nameLower){ try{ const userId = `${state.bank.replaceAll(" ","")}_${nameLower}`; const ref = doc(db, "users", userId); const snap = await getDoc(ref); return snap.exists() ? snap.data() : null; }catch(e){ return null; } }
+    const pmFindHint = $("#pmFindHint");
+    const btnFind = $("#btnFindUser");
+    if (btnFind){ btnFind.onclick = async ()=>{ const input=$("#pmTo"); const nameRaw=(input.value||"").trim(); const name=nameRaw.toLowerCase(); if (!name){ showToast("Bitte einen Namen eingeben."); return; } try{ await ensureAuth(); const data=await findUserByName(name); pmFindHint.textContent = data ? `✅ Spieler gefunden in ${data.bank}` : `❌ Kein Spieler "${nameRaw}" gefunden.`; }catch(e){ pmFindHint.textContent = "Suche fehlgeschlagen."; } }; }
+
+    // ----------- Bereich Navigation -----------
+    function showArea(id){
+      ["bankArea","slotsArea","houseArea","chatArea","jobArea","shopArea"].forEach(x=> { const el=$("#"+x); if(el) el.classList.add("hidden"); });
+      const target=$("#"+id); if (target) target.classList.remove("hidden");
+    }
+    function requireLoginThen(areaId){
+      if (!state.userDoc){ openSheet(); showToast("Bitte zuerst einloggen."); return; }
+      showArea(areaId);
+    }
+    $("#navBank").onclick  = ()=> showArea("bankArea");
+    $("#navSlots").onclick = ()=> requireLoginThen("slotsArea");
+    $("#navHouse").onclick = ()=> requireLoginThen("houseArea");
+    $("#navChat").onclick  = ()=> requireLoginThen("chatArea");
+    $("#btnSlots").onclick = ()=> requireLoginThen("slotsArea");
+    $("#btnHouse").onclick = ()=> requireLoginThen("houseArea");
+    $("#btnChat").onclick  = ()=> requireLoginThen("chatArea");
+    $("#btnJob").onclick   = ()=> requireLoginThen("jobArea");
+    $("#btnShop").onclick  = ()=> requireLoginThen("shopArea");
+
+    // ------- Slots helpers & games -------
     const SYMBOLS = ["🍋","🍒","🍇","🍀","⭐","🔔","7️⃣","🍉"];
     const stakes = [5,10,30,50,80,100];
+    const SLOT_MIN_INTERVAL = 2000;
+    let lastSlotAction = 0;
     function parseStake(selId){ return stakes.includes(Number($(selId).value)) ? Number($(selId).value) : 5; }
+    function slotGuard() {
+      const now = Date.now();
+      const diff = now - lastSlotAction;
+      if (diff < SLOT_MIN_INTERVAL) {
+        const wait = Math.ceil((SLOT_MIN_INTERVAL - diff) / 1000);
+        showToast(`Bitte noch ${wait}s warten…`);
+        return false;
+      }
+      lastSlotAction = now;
+      return true;
+    }
+    function setSlotsDisabled(disabled) {
+      ["#btnHigher","#btnLower","#btnCF","#btnSpin","#btnAuto10","#btnBuyCase","#btnOpenCase"]
+        .forEach(sel => { const el = document.querySelector(sel); if (el) el.disabled = disabled; });
+    }
+    function quickStatus(el, text) { if (el) { el.textContent = text; setTimeout(()=>{ if (el.textContent===text) el.textContent=""; }, 1200); } }
     async function spendCash(amount){ if (!state.userDoc) return openSheet(); await txUpdate(async (tx)=>{ const u=await tx.get(state.userDoc); const b=await tx.get(state.bankDoc); const ud=u.data(); const bd=b.data(); if((ud.cash||0)<amount) throw new Error("Zu wenig Bargeld. Bitte auszahlen."); tx.update(state.userDoc,{cash:(ud.cash||0)-amount}); tx.update(state.bankDoc,{funds:(bd.funds||0)+amount}); }); }
     async function payoutCash(amount){ if (!state.userDoc) return openSheet(); await txUpdate(async (tx)=>{ const u=await tx.get(state.userDoc); const b=await tx.get(state.bankDoc); const ud=u.data(); const bd=b.data(); tx.update(state.userDoc,{cash:(ud.cash||0)+amount}); tx.update(state.bankDoc,{funds:(bd.funds||0)-amount}); }); }
 
     // High/Lower
     let hlBusy=false;
-    $("#btnHigher").onclick = ()=> { if (!slotGuard()) return; playHL("higher"); };
-    $("#btnLower").onclick  = ()=> { if (!slotGuard()) return; playHL("lower");  };
+    $("#btnHigher") && ($("#btnHigher").onclick = ()=> { if (!slotGuard()) return; playHL("higher"); });
+    $("#btnLower")  && ($("#btnLower").onclick  = ()=> { if (!slotGuard()) return; playHL("lower");  });
     async function playHL(choice){
       if (hlBusy || !state.userDoc) { if (!state.userDoc) openSheet(); return; }
       hlBusy = true;
@@ -714,7 +819,7 @@
 
     // Coinflip
     let cfBusy=false;
-    $("#btnCF").onclick = async ()=>{
+    $("#btnCF") && ($("#btnCF").onclick = async ()=>{
       if (!slotGuard()) return;
       if (cfBusy){ return; }
       if (!state.userDoc){ openSheet(); return; }
@@ -733,28 +838,24 @@
       }catch(e){ showToast(e.message||"Fehler"); }
       cfBusy=false;
       setTimeout(()=>setSlotsDisabled(false), SLOT_MIN_INTERVAL);
-    };
+    });
 
     // Triple Chance
-    let tcBusy=false, tcLock=false;
-    $("#btnSpin").onclick = ()=>{
+    $("#btnSpin") && ($("#btnSpin").onclick = ()=>{
       if (!slotGuard()) return;
       quickStatus($("#tcStatus"), "… dreht");
       setSlotsDisabled(true);
       spinOnce().finally(()=> setTimeout(()=>setSlotsDisabled(false), SLOT_MIN_INTERVAL));
-    };
-    $("#btnAuto10").onclick = async ()=>{
+    });
+    $("#btnAuto10") && ($("#btnAuto10").onclick = async ()=>{
       if (!slotGuard()) return;
       if (!state.userDoc){ openSheet(); return; }
       setSlotsDisabled(true);
-      tcBusy=true;
       for (let i=0;i<10;i++){ await spinOnce(true); await sleep(160); }
-      tcBusy=false;
       setTimeout(()=>setSlotsDisabled(false), SLOT_MIN_INTERVAL);
-    };
+    });
     async function spinOnce(fromAuto=false){
       if (!state.userDoc){ openSheet(); return; }
-      if (tcLock) return; tcLock=true;
       const stake = parseStake("#stakeTC");
       try{
         if (!fromAuto) quickStatus($("#tcStatus"), "… dreht");
@@ -769,12 +870,11 @@
         else { $("#tcStatus").textContent = `Verlust ${EUR(stake)}`; await logFeed(`TripleChance Verlust: ${EUR(stake)}`); }
         setTimeout(()=>$("#tcStatus").textContent="", 1400);
       }catch(e){ showToast(e.message||"Fehler"); }
-      tcLock=false;
     }
 
-    // ------- CS:GO CASE (ID: case_csg_001) -------
+    // CS:GO CASE (must buy before open)
     const CASE_ID = "case_csg_001";
-    $("#caseId").textContent = CASE_ID;
+    $("#caseId") && ($("#caseId").textContent = CASE_ID);
     const CASE_LOOT = [
       { name:"Graues Item",  weight:62, multiplier:0.0 },
       { name:"Blaues Item",  weight:28, multiplier:1.2 },
@@ -790,24 +890,29 @@
       for(const it of CASE_LOOT){ if((r-=it.weight)<=0) return it; }
       return CASE_LOOT[0];
     }
+    let hasCase = false;
     async function buyCase(){
       if (!state.userDoc) return openSheet();
       const stake = stakeCase();
       try{
-        await spendCash(stake); // Einsatz ➜ Bankfonds
+        await spendCash(stake);
+        hasCase = true;
+        const openBtn = $("#btnOpenCase"); if (openBtn) openBtn.disabled = false;
         $("#caseStatus").textContent = "Kiste gekauft.";
         await logFeed(`CS:GO-Kiste (${CASE_ID}) gekauft: Einsatz ${EUR(stake)}`);
       }catch(e){ showToast(e.message||"Fehler"); }
     }
     async function openCase(){
       if (!state.userDoc) return openSheet();
+      if (!hasCase){ showToast("Bitte zuerst eine Kiste kaufen."); return; }
       const stake = stakeCase();
       try{
-        // Öffnen kostet nichts zusätzlich; Gewinn kommt aus Bankfonds
         const drop = pickWeighted();
         const win  = Math.round(stake * drop.multiplier);
         $("#casePrize").textContent = `Drop: ${drop.name} (${drop.multiplier}×) • Gewinn ${EUR(win)}`;
-        if (win>0) await payoutCash(win); // Auszahlung aus Bankfonds an User
+        if (win>0) await payoutCash(win);
+        hasCase = false;
+        const openBtn = $("#btnOpenCase"); if (openBtn) openBtn.disabled = true;
         await logFeed(`CS:GO-Kiste geöffnet (${CASE_ID}): ${drop.name}, Gewinn ${EUR(win)}`);
       }catch(e){ showToast(e.message||"Fehler"); }
     }
@@ -816,45 +921,95 @@
     if (btnBuyCase)  btnBuyCase.onclick  = ()=> { if (!slotGuard()) return; setSlotsDisabled(true); buyCase().finally(()=> setTimeout(()=>setSlotsDisabled(false), SLOT_MIN_INTERVAL)); };
     if (btnOpenCase) btnOpenCase.onclick = ()=> { if (!slotGuard()) return; setSlotsDisabled(true); openCase().finally(()=> setTimeout(()=>setSlotsDisabled(false), SLOT_MIN_INTERVAL)); };
 
-    // ---- Chat (einfach) ----
-    function attachChat(){
-      const qg = query(collection(db,"messages"), where("bank","==",state.bank), where("type","==","global"), orderBy("at","desc"), limit(50));
-      onSnapshot(qg, (qs)=>{
-        const box = $("#globalList"); box.innerHTML="";
-        qs.forEach(d=>{ const m=d.data(); const div=document.createElement("div"); div.className="chat-bubble "+(m.from===state.user?.name?"mine":""); div.innerHTML=`<b>${m.from}</b><br>${m.text||""}`; box.appendChild(div); });
-      });
-      if (state.user){
-        const qp = query(collection(db,"messages"), where("bank","==",state.bank), where("type","==","private"), orderBy("at","desc"), limit(50));
-        onSnapshot(qp, (qs)=>{
-          const box = $("#privateList"); box.innerHTML="";
-          qs.forEach(d=>{ const m=d.data(); if (m.from===state.user.name || m.to===state.user.name){ const div=document.createElement("div"); div.className="chat-bubble "+(m.from===state.user?.name?"mine":""); div.innerHTML=`<b>${m.from} ➜ ${m.to}</b><br>${m.text||""}`; box.appendChild(div); } });
-        });
+    // ---- Job (daily) ----
+    const JOB_MAX_HITS = 100;
+    const JOB_TIME_MS = 60*1000; // 1 minute
+    const JOB_PAY_PER_HIT = 20;
+    let jobRunning=false, jobTarget=-1, jobHits=0, jobTimerId=null, jobTickId=null, jobEndsAt=0, jobAccrued=0;
+
+    function buildJobGrid(){
+      const grid = $("#jobGrid"); if (!grid) return;
+      grid.innerHTML = "";
+      for (let i=0;i<100;i++){ // 20 x 5
+        const cell = document.createElement("div");
+        cell.className = "job-cell";
+        cell.dataset.idx = i;
+        cell.onclick = ()=> handleJobClick(i);
+        grid.appendChild(cell);
       }
     }
-    $("#sendGlobal").onclick = async ()=>{ const text=$("#globalMsg").value.trim(); if (!text) return; try{ if (!state.userDoc) return openSheet(); await ensureAuth(); await addDoc(collection(db,"messages"), { bank: state.bank, type:"global", text, from: state.user?.name||"?", at: serverTimestamp() }); $("#globalMsg").value=""; }catch(e){ showToast(e.message||"Fehler"); } };
-    $("#sendPrivate").onclick = async ()=>{ const to=$("#pmTo").value.trim(); const text=$("#privateMsg").value.trim(); if (!to||!text) return; try{ if (!state.userDoc) return openSheet(); await ensureAuth(); await addDoc(collection(db,"messages"), { bank: state.bank, type:"private", to, text, from: state.user?.name||"?", at: serverTimestamp() }); $("#privateMsg").value=""; }catch(e){ showToast(e.message||"Fehler"); } };
+    buildJobGrid();
 
-    $("#tabGlobal").onclick = ()=>{ $("#tabGlobal").classList.add("active"); $("#tabPrivate").classList.remove("active"); $("#chatGlobal").classList.remove("hidden"); $("#chatPrivate").classList.add("hidden"); };
-    $("#tabPrivate").onclick = ()=>{ $("#tabPrivate").classList.add("active"); $("#tabGlobal").classList.remove("active"); $("#chatPrivate").classList.remove("hidden"); $("#chatGlobal").classList.add("hidden"); };
+    function formatTime(ms){ const s=Math.max(0, Math.ceil(ms/1000)); const mm=String(Math.floor(s/60)).padStart(2,"0"); const ss=String(s%60).padStart(2,"0"); return mm+":"+ss; }
+    function resetJobUI(){ jobHits=0; jobTarget=-1; jobAccrued=0; $("#jobHits").textContent="0"; $("#jobEarn").textContent="€0,00"; $("#jobTime").textContent="01:00"; [...$("#jobGrid").children].forEach(c=> c.classList.remove("target")); $("#btnStartJob").disabled=false; $("#btnEndJob").disabled=true; }
+    async function canStartJobToday(){ if (!state.userDoc) return false; const snap = await getDoc(state.userDoc); const u = snap.data()||{}; const today = todayDE(); return (u.lastJob||"") !== today; }
+    function spawnTarget(){ const cells=[...$("#jobGrid").children]; cells.forEach(c=> c.classList.remove("target")); jobTarget=Math.floor(Math.random()*cells.length); cells[jobTarget].classList.add("target"); }
+    async function startJob(){ if (!state.userDoc){ openSheet(); return; } if(jobRunning) return; if(!(await canStartJobToday())){ showToast("Job schon erledigt – morgen wieder ab 00:00."); return; } jobRunning=true; jobAccrued=0; $("#btnStartJob").disabled=true; $("#btnEndJob").disabled=false; jobEndsAt=Date.now()+JOB_TIME_MS; spawnTarget(); jobTimerId=setTimeout(()=> endJob(), JOB_TIME_MS); jobTickId=setInterval(()=>{ const left=jobEndsAt-Date.now(); $("#jobTime").textContent=formatTime(left); },250); }
+    async function endJob(){ if(!jobRunning) return; jobRunning=false; clearTimeout(jobTimerId); jobTimerId=null; clearInterval(jobTickId); jobTickId=null; [...$("#jobGrid").children].forEach(c=> c.classList.remove("target")); const maxEarn=JOB_MAX_HITS*(JOB_PAY_PER_HIT+(state.user?.jobToolBonus||0)); const earnings=Math.min(jobAccrued, maxEarn); try{ await txUpdate(async (tx)=>{ const u=await tx.get(state.userDoc); const ud=u.data(); const today=todayDE(); if ((ud.lastJob||"")===today) throw new Error("Job heute bereits abgerechnet."); tx.update(state.userDoc, { bankBalance:(ud.bankBalance||0)+earnings, lastJob: today }); }); $("#jobEarn").textContent = EUR(earnings); await logFeed(`Job erledigt: +${EUR(earnings)} (${jobHits} Treffer)`); showToast(`Job beendet: ${EUR(earnings)}`); }catch(e){ showToast(e.message||"Fehler"); } resetJobUI(); }
+    function handleJobClick(idx){ if(!jobRunning) return; if(idx===jobTarget){ const cells=[...$("#jobGrid").children]; const cell=cells[jobTarget]; if(cell){ cell.classList.add("burst"); setTimeout(()=> cell.classList.remove("burst"), 200); } jobHits++; const rate = JOB_PAY_PER_HIT + (state.user?.jobToolBonus||0); jobAccrued += rate; $("#jobHits").textContent=String(jobHits); $("#jobEarn").textContent=EUR(jobAccrued); if(jobHits>=JOB_MAX_HITS){ endJob(); return; } setTimeout(()=> spawnTarget(), 120); } }
+    $("#btnStartJob").onclick = startJob;
+    $("#btnEndJob").onclick = endJob;
 
-    // ----------- Bereich Navigation -----------
-    function showArea(id){
-      ["bankArea","slotsArea","houseArea","chatArea"].forEach(x=> $("#"+x).classList.add("hidden"));
-      $("#"+id).classList.remove("hidden");
+    // ---- Job tools (pickaxes) ----
+    const JOB_TOOLS = [
+      { id:0, key:"hand",      name:"Hand",           cost:0,       bonus:0,    color:"#e5e7eb" },
+      { id:1, key:"wood",      name:"Holz Spitzhacke",cost:10000,   bonus:10,   color:"#b45309" },
+      { id:2, key:"iron",      name:"Eisen Spitzhacke",cost:25000,  bonus:30,   color:"#4b5563" },
+      { id:3, key:"diamond",   name:"Diamant Spitzhacke",cost:50000,bonus:50,   color:"#06b6d4" },
+      { id:4, key:"netherite", name:"Netherrite Spitzhacke",cost:100000,bonus:200,color:"#4c1d95" },
+      { id:5, key:"ultra",     name:"Ultra Spitzhacke",cost:1000000,bonus:1000, color:"#ca8a04" },
+    ];
+    function toolById(id){ return JOB_TOOLS.find(t=>t.id===id)||JOB_TOOLS[0]; }
+
+    function renderShop(u){
+      const wrap = $("#toolList"); if (!wrap) return;
+      wrap.innerHTML="";
+      const cashNow = (u.cash||0);
+      const rateNow = 20 + (toolById(u.jobTool||0).bonus||0);
+      const shopRate = $("#shopRate"); if (shopRate) shopRate.textContent = EUR(rateNow);
+      JOB_TOOLS.filter(t=>t.id>0).forEach(t=>{
+        const owned = (u.jobTool||0) === t.id;
+        const afford = cashNow >= t.cost;
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <div class="row between">
+            <div class="row" style="gap:.6rem">
+              <div style="width:42px;height:42px;border-radius:10px;background:${t.color}22;border:2px solid ${t.color};display:flex;align-items:center;justify-content:center;font-size:22px">⛏️</div>
+              <div class="col">
+                <div class="section-title" style="margin:0">${t.name}</div>
+                <small>+${EUR(t.bonus)} pro Treffer</small>
+              </div>
+            </div>
+            <div class="col tool-right" style="align-items:flex-end">
+              <b>${EUR(t.cost)}</b>
+              <button class="btn ${owned?'':'primary'}" data-buy="${t.id}" ${owned||!afford?'disabled':''} title="${owned?'Bereits aktiv':(afford?'Kaufen':'Zu wenig Bargeld (💵)')}">${owned?'Aktiv':(afford?'Kaufen':'Zu wenig 💵')}</button>
+            </div>
+          </div>`;
+        wrap.appendChild(card);
+      });
+      $$("#toolList [data-buy]").forEach(b=> b.onclick = ()=> buyTool(Number(b.dataset.buy)));
     }
-    function requireLoginThen(areaId){
-      if (!state.userDoc){ openSheet(); showToast("Bitte zuerst einloggen."); return; }
-      showArea(areaId);
-    }
-    $("#navBank").onclick  = ()=> showArea("bankArea");
-    $("#navSlots").onclick = ()=> requireLoginThen("slotsArea");
-    $("#navHouse").onclick = ()=> requireLoginThen("houseArea");
-    $("#navChat").onclick  = ()=> requireLoginThen("chatArea");
-    $("#btnSlots").onclick = ()=> requireLoginThen("slotsArea");
-    $("#btnHouse").onclick = ()=> requireLoginThen("houseArea");
-    $("#btnChat").onclick  = ()=> requireLoginThen("chatArea");
 
-    renderHouses({});
-  </script>
+    async function buyTool(id){
+      if (!state.userDoc) return openSheet();
+      const tool = toolById(id); if (!tool) return;
+      try{
+        await txUpdate(async (tx)=>{
+          const u = await tx.get(state.userDoc); const b = await tx.get(state.bankDoc);
+          const ud = u.data(); const bd = b.data();
+          if ((ud.cash||0) < tool.cost) throw new Error("Zu wenig Bargeld.");
+          tx.update(state.userDoc, { cash:(ud.cash||0)-tool.cost, jobTool: tool.id });
+          tx.update(state.bankDoc, { funds:(bd.funds||0)+tool.cost });
+        });
+        await logFeed(`Gekauft: ${tool.name} (${EUR(tool.cost)})`);
+        showToast(`${tool.name} aktiviert!`);
+      }catch(e){ showToast(e.message||"Fehler"); }
+    }
+
+  
+}
+start().catch(e=>{ console.error(e); try{ alert("Init-Fehler: "+(e?.message||e)); }catch(_e){} });
+</script>
 </body>
 </html>
