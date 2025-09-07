@@ -59,7 +59,7 @@
     footer.nav{position:fixed;left:0;right:0;bottom:0;padding:.6rem;background:#ffffffee;border-top:1px solid var(--outline);display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;backdrop-filter:saturate(1.2) blur(6px);z-index:60}
 
     /* Modal */
-    .modal{pointer-events:auto;position:fixed;inset:0;display:none;align-items:flex-start;justify-content:center;background:rgba(15,22,36,.12);backdrop-filter:blur(2px) saturate(1.1);z-index:1000}
+    .modal{position:fixed;inset:0;display:none;align-items:flex-start;justify-content:center;background:rgba(15,22,36,.12);backdrop-filter:blur(2px) saturate(1.1);z-index:1000}
     .sheet{width:100%;max-width:880px;background:var(--card);border:1px solid var(--outline);border-radius:18px;box-shadow:var(--shadow);margin:72px 12px 18px;overflow:hidden}
     .handle{width:46px;height:5px;background:#e5e7eb;border-radius:999px;margin:10px auto}
 
@@ -92,8 +92,7 @@
     <div class="container">
       <div class="top-grid">
         <div class="left-wrap">
-          <div id="btnBank" class="circle" title="Bank wählen">💶</div>
-          <button id="btnLogout" class="btn danger small hidden">Logout</button>
+          <button id="btnLogout" class="btn danger small">Logout</button>
           <div class="col">
             <div class="bank-name" id="bankLabel">—</div>
             <div class="acct-line money" id="acctBalance">—</div>
@@ -327,7 +326,7 @@
   </footer>
 
   <!-- Bank Sheet -->
-  <div id="sheetBank" class="modal hidden" style="display:none;align-items:flex-start">
+  <div id="sheetBank" class="modal" style="display:flex;align-items:flex-start">
     <div class="sheet">
       <div class="handle"></div>
       <div class="container" style="padding:10px 12px 18px">
@@ -351,19 +350,27 @@
           <small id="loginHint">Startguthaben: €1.500. Täglicher Bonus: €500.</small>
         </div>
       </div>
-    
-        <div class="center" style="padding:10px"><button id="closeBank" class="btn">Schließen</button></div>
-</div>
+    </div>
   </div>
 
   <div id="toast" class="toast hidden"></div>
 
-  <script type="module">
-async function start(){
+  
+<script>
+(function(){
+  const $ = s => document.querySelector(s);
+  function openSheet(){ const m=$("#sheetBank"); if(!m) return; m.style.display="flex"; m.classList.remove("hidden"); }
+  function closeSheet(){ const m=$("#sheetBank"); if(!m) return; m.style.display="none"; m.classList.add("hidden"); }
+  function wire(){ const b=$("#btnBank"), c=$("#closeBank"); if(b) b.onclick=openSheet; if(c) c.onclick=closeSheet; }
+  if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded", wire); } else { wire(); }
+  window._openSheet=openSheet; window._closeSheet=closeSheet;
+})();
+</script>
 
-    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js");
-    const { getAuth, signInAnonymously, onAuthStateChanged, setPersistence, browserLocalPersistence } = await import("https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js");
-    const { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, addDoc, serverTimestamp, query, where, orderBy, limit, runTransaction } = await import("https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js");
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, addDoc, serverTimestamp, query, where, orderBy, limit, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
     // ---- Firebase ----
     const firebaseConfig = { apiKey: "AIzaSyDN1MZv_q38Zoymt92BHWTe9sUNwteT1KA", authDomain: "sample-firebase-ai-app-b02a4.firebaseapp.com", projectId: "sample-firebase-ai-app-b02a4", storageBucket: "sample-firebase-ai-app-b02a4.firebasestorage.app", messagingSenderId: "382050648468", appId: "1:382050648468:web:8c6f34051a7b2991ebcf81" };
@@ -418,29 +425,12 @@ async function start(){
 
     // ---------- UI refs ----------
     const bankSheet = $("#sheetBank"), bankLabel=$("#bankLabel"), bankBalance=$("#bankBalance"), cashLabel=$("#cashLabel"), acctBalance=$("#acctBalance"), stockPriceEl=$("#stockPrice"), stockBankName=$("#stockBankName"), bankFundsEl=$("#bankFunds"), userSharesEl=$("#userShares");
-    const openSheet = ()=> { bankSheet.style.display = "flex"; bankSheet.classList.remove("hidden"); };
-    $("#btnBank").onclick = openSheet;
-    // --- Auth buttons toggle ---
-    const btnLogoutEl = document.getElementById("btnLogout");
-    const btnBankEl = document.getElementById("btnBank");
-    function updateAuthButtons(){
-      if (state.userDoc){
-        if (btnBankEl) btnBankEl.classList.add("hidden");
-        if (btnLogoutEl) btnLogoutEl.classList.remove("hidden");
-      }else{
-        if (btnLogoutEl) btnLogoutEl.classList.add("hidden");
-        if (btnBankEl) btnBankEl.classList.remove("hidden");
-      }
-    }
-    if (btnBankEl){ btnBankEl.onclick = openSheet; }
-    updateAuthButtons();
-
-    const closeSheet = ()=> { bankSheet.style.display = "none"; bankSheet.classList.add("hidden"); };
-    $("#closeBank").onclick = closeSheet;
+    const openSheet = ()=> bankSheet.style.display = "flex";
+    const closeSheet = ()=> bankSheet.style.display = "none";
     setTimeout(()=>showToast("Tipp: Wähle deine Bank & logge dich ein."), 600);
 
     // Logout
-    $("#btnLogout").onclick = ()=>{ state.listeners.forEach(u=>u()); state.listeners=[]; state.user=null; state.userDoc=null; updateAuthButtons(); openSheet(); };
+    $("#btnLogout").onclick = ()=>{ state.listeners.forEach(u=>u()); state.listeners=[]; state.user=null; state.userDoc=null; openSheet(); };
 
     // Bank choice
     $$("#sheetBank [data-bank]").forEach(btn=>{
@@ -471,20 +461,26 @@ async function start(){
         const uname = name.toLowerCase();
         const passHash = await hash(pass);
 
-        /* users_index übersprungen (maximale Kompatibilität) */
+        const idxRef = doc(db, "users_index", uname);
+        const idxSnap = await getDoc(idxRef);
+        if (idxSnap.exists() && idxSnap.data().bank !== state.bank){
+          showToast(`Name bereits in ${idxSnap.data().bank} registriert.`);
+          return;
+        }
+
         const userId = `${state.bank.replaceAll(" ","")}_${uname}`;
         const userRef = doc(db, "users", userId);
         const snap = await getDoc(userRef);
 
         if (!snap.exists()){
-          const init = { bank: state.bank, name, passHash, createdAt: serverTimestamp(), owner: authUser?.uid || null, bankBalance: 1500, cash: 0, lastDaily: "", lastBorrow: "", loanOutstanding: 0, creditOutstanding: 0, lastRent: "", shares: 0, jobTool: 0, lastJob: "" };
+          const init = { bank: state.bank, name, passHash, createdAt: serverTimestamp(), bankBalance: 1500, cash: 0, lastDaily: "", lastBorrow: "", loanOutstanding: 0, creditOutstanding: 0, lastRent: "", shares: 0, jobTool: 0, lastJob: "" };
           await setDoc(userRef, init);
           /* users_index write entfernt */
           showToast("Konto erstellt. Willkommen!");
         }else{
           const data = snap.data();
           if (data.passHash !== passHash){ showToast("Falsches Passwort."); return; }
-          try{ if (!data.owner) await updateDoc(userRef, { owner: authUser?.uid || null }); }catch(e){}
+          try{ if (!data.owner) await updateDoc(userRef, { owner: authUser?.uid || null }); }catch(_e){}
         }
         await attachUser(userRef);
         closeSheet();
@@ -493,7 +489,7 @@ async function start(){
       finally{ try{ clearTimeout(_guard); }catch{} btn.disabled = false; btn.textContent = oldTxt; }
     };
 
-    async function attachUser(userRef){ updateAuthButtons();
+    async function attachUser(userRef){
       state.listeners.forEach(u=>u()); state.listeners=[];
       state.userDoc = userRef;
       const unsub = onSnapshot(userRef, (d)=>{
@@ -513,7 +509,6 @@ async function start(){
         state.user.jobToolBonus = toolById(u.jobTool||0).bonus||0;
       });
       state.listeners.push(unsub);
-      }catch(e){ console.warn("bank snapshot attach failed:", e?.message||e); }
       await ensureBankDoc(); await ensureTicker(); await loadFeed(); attachChat();
     }
 
@@ -522,12 +517,12 @@ async function start(){
       await ensureAuth();
       const id = state.bank.replaceAll(" ","");
       const bRef = doc(db, "banks", id);
-      let snap=null; try{ snap = await getDoc(bRef); }catch(e){ console.warn("bank read denied:", e?.message||e); }
-      if (snap && !snap.exists()){
-        try{ await setDoc(bRef, { name: state.bank, funds: 1_000_000_000, stockPrice: 100, lastStockUpdate: Date.now() }); }catch(e){ console.warn("bank create denied:", e?.message||e); }
+      const snap = await getDoc(bRef);
+      if (!snap.exists()){
+        await setDoc(bRef, { name: state.bank, funds: 1_000_000_000, stockPrice: 100, lastStockUpdate: Date.now() });
       }
       state.bankDoc = bRef;
-      try{ const unsub = onSnapshot(bRef, (d)=>{
+      const unsub = onSnapshot(bRef, (d)=>{
         const b = d.data(); if (!b) return;
         bankFundsEl.textContent = EUR(b.funds||0);
         stockPriceEl.textContent = EUR(b.stockPrice||0);
@@ -722,16 +717,16 @@ async function start(){
 
     // ---- Chat ----
     function attachChat(){
-      const qg = query(collection(db,"messages"), where("bank","==",state.bank), where("type","==","global"), orderBy("at","desc"), limit(50));
+      const qg = query(collection(db,"messages"), orderBy("at","desc"), limit(100));
       onSnapshot(qg, (qs)=>{
         const box = $("#globalList"); box.innerHTML="";
-        qs.forEach(d=>{ const m=d.data(); const div=document.createElement("div"); div.className="chat-bubble "+(m.from===state.user?.name?"mine":""); div.innerHTML=`<b>${m.from}</b><br>${m.text||""}`; box.appendChild(div); });
+        qs.forEach(d=>{ const m=d.data(); if(m.bank===state.bank && m.type==="global"){ const div=document.createElement("div"); div.className="chat-bubble "+(m.from===state.user?.name?"mine":""); div.innerHTML=`<b>${m.from}</b><br>${m.text||""}`; box.appendChild(div);} });
       });
       if (state.user){
-        const qp = query(collection(db,"messages"), where("bank","==",state.bank), where("type","==","private"), orderBy("at","desc"), limit(50));
+        const qp = query(collection(db,"messages"), orderBy("at","desc"), limit(200));
         onSnapshot(qp, (qs)=>{
           const box = $("#privateList"); box.innerHTML="";
-          qs.forEach(d=>{ const m=d.data(); if (m.from===state.user.name || m.to===state.user.name){ const div=document.createElement("div"); div.className="chat-bubble "+(m.from===state.user?.name?"mine":""); div.innerHTML=`<b>${m.from} ➜ ${m.to}</b><br>${m.text||""}`; box.appendChild(div); } });
+          qs.forEach(d=>{ const m=d.data(); if (m.bank===state.bank && m.type==="private" && (m.from===state.user?.name || m.to===state.user?.name)){ const div=document.createElement("div"); div.className="chat-bubble "+(m.from===state.user?.name?"mine":""); div.innerHTML=`<b>${m.from} ➜ ${m.to}</b><br>${m.text||""}`; box.appendChild(div); } });
         });
       }
     }
@@ -742,7 +737,7 @@ async function start(){
     $("#tabPrivate").onclick = ()=>{ $("#tabPrivate").classList.add("active"); $("#tabGlobal").classList.remove("active"); $("#chatPrivate").classList.remove("hidden"); $("#chatGlobal").classList.add("hidden"); };
 
     // User search
-    async function findUserByName(nameLower){ try{ const userId = `${state.bank.replaceAll(" ","")}_${nameLower}`; const ref = doc(db, "users", userId); const snap = await getDoc(ref); return snap.exists() ? snap.data() : null; }catch(e){ return null; } }
+    async function findUserByName(nameLower){ try{ const userId = `${state.bank.replaceAll(" ","")}_${nameLower}`; const ref = doc(db,"users",userId); const s = await getDoc(ref); return s.exists()?s.data():null; }catch(e){ return null; } }
     const pmFindHint = $("#pmFindHint");
     const btnFind = $("#btnFindUser");
     if (btnFind){ btnFind.onclick = async ()=>{ const input=$("#pmTo"); const nameRaw=(input.value||"").trim(); const name=nameRaw.toLowerCase(); if (!name){ showToast("Bitte einen Namen eingeben."); return; } try{ await ensureAuth(); const data=await findUserByName(name); pmFindHint.textContent = data ? `✅ Spieler gefunden in ${data.bank}` : `❌ Kein Spieler "${nameRaw}" gefunden.`; }catch(e){ pmFindHint.textContent = "Suche fehlgeschlagen."; } }; }
@@ -1007,9 +1002,6 @@ async function start(){
       }catch(e){ showToast(e.message||"Fehler"); }
     }
 
-  
-}
-start().catch(e=>{ console.error(e); try{ alert("Init-Fehler: "+(e?.message||e)); }catch(_e){} });
-</script>
+  </script>
 </body>
 </html>
