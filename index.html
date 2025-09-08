@@ -144,6 +144,23 @@
   #workerList{ max-height: 300px; overflow: auto; padding-right: 4px; }
 </style>
 
+
+<style id="mobile-bottom-nav">
+  /* Desktop (>=721px): show top icons, hide mobile footer + extra cash line */
+  @media (min-width: 721px){
+    #mobileNav{ display:none !important; }
+    .icon-row{ display:flex !important; }
+    #cashLabelTop{ display:none !important; }
+  }
+  /* Mobile (<=720px): hide top icon-row, show bottom nav, show cash top-line */
+  @media (max-width: 720px){
+    .icon-row{ display:none !important; }
+    #mobileNav{ display:grid !important; grid-template-columns:repeat(7,1fr); }
+    #cashLabelTop{ display:block !important; }
+    body{ padding-bottom:92px; } /* space so content not hidden by bottom nav */
+  }
+</style>
+
 </head>
 <body>
   <div class="topbar">
@@ -154,6 +171,7 @@
           <div class="col">
             <div class="bank-name" id="bankLabel">—</div>
             <div class="acct-line money" id="acctBalance">—</div>
+            <div class="acct-line money hidden" id="cashLabelTop">€0</div>
           </div>
         </div>
         <div class="icon-row">
@@ -1868,6 +1886,38 @@ function showAreas(ids){
 })();
 // === End guards ===
 
+
+// --- Mobile footer nav bindings + cash mirror ---
+(function(){
+  function bind(id, area){ const el = document.querySelector(id); if (el) el.onclick = ()=> requireLoginThen(area); }
+  bind("#navBank","bankArea");
+  bind("#navJob","jobArea");
+  bind("#navFirm","firmArea");
+  bind("#navSlots","slotsArea");
+  bind("#navHouse","houseArea");
+  bind("#navChat","chatArea");
+  bind("#navShop","shopArea");
+  // Mirror cash to #cashLabelTop when snapshot updates
+  const _origAttach = attachUser;
+  attachUser = async function(userRef){
+    await _origAttach(userRef);
+    try{
+      const cl2 = document.querySelector("#cashLabelTop");
+      if (cl2){ const v = document.querySelector("#cashLabel")?.textContent || ""; cl2.textContent = v; }
+    }catch(_){}
+  };
+})();
+
 </script>
-</body>
-</html>
+
+  <footer class="nav" id="mobileNav">
+    <div id="navBank"  class="circle" title="Bank">💶</div>
+    <div id="navJob"   class="circle" title="Job">👷</div>
+    <div id="navFirm"  class="circle" title="Firma">👨‍💼</div>
+    <div id="navSlots" class="circle" title="Slots">🎰</div>
+    <div id="navHouse" class="circle" title="Häuser">🏠</div>
+    <div id="navChat"  class="circle" title="Chat">💬</div>
+    <div id="navShop"  class="circle" title="Shop">💵</div>
+  </footer>
+
+</body></html>
